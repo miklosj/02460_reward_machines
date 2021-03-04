@@ -2,19 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 """ Simple Minecraft environment """
-"
-    The environment state is a two dimensional array
-    shaped [grid position, task]
+
+" The environment state is a two dimensional array "
+" shaped [grid position, task]                     "
     
-    In this simple implementation there are only two 
-    possible tasks:
-    1st: Get wood
-    2nd: go to crafttable
+" In this simple implementation there are only two "
+" possible tasks:                                  "
+" 1st: Get wood                                    "
+" 2nd: go to crafttable                            "
 
-    The terminal state is set when the agent reaches the
-    crafttable only after picking the wood.
+" The terminal state is set when the agent reaches " 
+" the crafttable only after picking the wood.      "
 
-"
+
 class Minecraft(object):
     def __init__(self, m, n, resources):
         # Define gridsize m*n
