@@ -1,36 +1,38 @@
 ﻿# Reinforcement Learning for Rewards Machines
  
+ ## About
+ ## Requirements
+ ## Usage
+* Syntax: `python main.py --algorithm=<algorithm> --environment=<environment> --num_steps=<num_steps>`
+ 
  ## Structure
 
 ```
 --- /src
       |
       --- main.py
-      ---export_summary.py (TODO)
-      --- /common
+      --- __init__.py
+      --- /agents
               |
-              --- curriculum.py
-              --- replay_buffer.py (TODO)
-      --- /qrm
+              --- __init__.py
+              --- dqn_algorithm.pu
+              --- run_dqn.py
+              --- utils.py
+              --- TabQ_learning.py
+              --- QRM.py
+              --- /DQRM
+                    |
+                    --- 
+      --- /RewardMachines
               |
-              --- qrm.py
-              --- learning_params.py
-              --- policy_bank.py
-      --- /reward_machines
-              |
-              --- reward_functions.py
               --- reward_machine.py
-              --- reward_machine_utils.py
-      --- /tester
+              --- rm_utils.py
+              --- office.json
+      --- /envs
               |
-              --- saver.py
-              --- test_utils.py
-              --- tester.py
-              --- tester_params.py
-      --- tester_office.py
-      --- /worlds
-              |
-              --- game.py
-              --- game_objects.py
-              --- office_world.py                 
-```
+              --- __init__.py
+              --- make_env.py
+              --- main.py
+              --- minecraft_RM.py
+              --- minecraft.py
+              --- office.py
