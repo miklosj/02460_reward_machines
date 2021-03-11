@@ -2,11 +2,11 @@
  
  ## About
  Reinforcement Learning for Reward Machines. Relevant papers:
- * [[pdf]](https://arxiv.org/pdf/2010.03950.pdf)
+ * *Reward Machines: Exploiting Reward Function Structure in Reinforcement Learning* [[pdf]](https://arxiv.org/pdf/2010.03950.pdf)
  * *Using Reward Machines for High-Level Task Specification and Decomposition in Reinforcement Learning* [[pdf]](http://proceedings.mlr.press/v80/icarte18a/icarte18a.pdf)
- * [[pdf]](https://www.ijcai.org/Proceedings/2019/0840.pdf)
- * [[pdf]](https://papers.nips.cc/paper/2019/file/532435c44bec236b471a47a88d63513d-Paper.pdf)
- * [[pdf]](https://arxiv.org/pdf/1909.05912.pdf)
+ * *LTL and Beyond: Formal Languages for Reward Function Specification in Reinforcement Learning* [[pdf]](https://www.ijcai.org/Proceedings/2019/0840.pdf)
+ * *Learning Reward Machines for Partially Observable Reinforcement Learning* [[pdf]](https://papers.nips.cc/paper/2019/file/532435c44bec236b471a47a88d63513d-Paper.pdf)
+ * *Joint Inference of Reward Machines and Policies for Reinforcement Learning* [[pdf]](https://arxiv.org/pdf/1909.05912.pdf)
  
  ## Requirements
  * torch==1.8.0
@@ -17,8 +17,9 @@
 * Syntax: `python main.py --algorithm=<algorithm> --environment=<environment> --num_steps=<num_steps>`
  
  ## Options
- * --algorithm: dqn
- * --environment: office
+ * --algorithm: dqn (default dqn)
+ * --environment: office (default office)
+ * --num_steps: (default 10)
  
  ## Structure
 
