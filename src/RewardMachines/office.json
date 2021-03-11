@@ -1,0 +1,58 @@
+{
+
+	"tasks":	[
+				{
+					"task_id":1,
+					"initial_state":0,
+					"rm_states": [
+									{"U":0, "u0":0, "delta_u":"!c&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":0, "u0":1, "delta_u":"c&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":1, "delta_u":"!o&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":2, "delta_u":"o&!*", "delta_r": "ConstantRewardFunction(1)"},
+									{"U":2, "u0":2, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
+								]
+				},
+				{
+					"task_id":2,
+					"initial_state":0,
+					"rm_states": [
+									{"U":0, "u0":0, "delta_u":"!m&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":0, "u0":1, "delta_u":"m&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":1, "delta_u":"!o&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":2, "delta_u":"o&!*", "delta_r": "ConstantRewardFunction(1)"},
+									{"U":2, "u0":2, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
+								]
+				},
+				{
+					"task_id":3,
+					"initial_state":0,
+					"rm_states": [
+									{"U":0, "u0":0, "delta_u":"!m&!c&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":0, "u0":2, "delta_u":"m&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":0, "u0":3, "delta_u":"!m&c&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":1, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":2, "u0":2, "delta_u":"!c&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":2, "u0":4, "delta_u":"c&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":3, "u0":3, "delta_u":"!m&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":3, "u0":4, "delta_u":"m&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":4, "u0":1, "delta_u":"o&!*", "delta_r": "ConstantRewardFunction(1)"},
+									{"U":4, "u0":4, "delta_u":"!o&!*", "delta_r": "ConstantRewardFunction(0)"}
+								]
+				},
+				{
+					"task_id":4,
+					"initial_state":0,
+					"rm_states": [
+									{"U":0, "u0":0, "delta_u":"!A&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":0, "u0":1, "delta_u":"A&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":1, "delta_u":"!D&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":1, "u0":2, "delta_u":"D&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":2, "u0":2, "delta_u":"!C&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":2, "u0":3, "delta_u":"C&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":3, "u0":3, "delta_u":"!B&!*", "delta_r": "ConstantRewardFunction(0)"},
+									{"U":3, "u0":4, "delta_u":"B&!*", "delta_r": "ConstantRewardFunction(1)"},
+									{"U":4, "u0":4, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
+								]
+				}
+				]
+}
