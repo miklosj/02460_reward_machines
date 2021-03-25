@@ -15,7 +15,7 @@ class ConstantRewardFunction:
 
 	def get_type(self):
 		return self.type
-	
+
 	def get_reward(self):
 		return self.c
 
@@ -26,7 +26,7 @@ selected in <file_rm> and for the env specified by the index <idx_rm>
 Available methods:
 - is_terminal(u1): returns boolean
 - get_next_state(u1, true_props): returns next state u2
-- get_reward(u1, u2, s1, action, s2): returns constant reward as given by delta_r[u1][u2] 
+- get_reward(u1, u2, s1, action, s2): returns constant reward as given by delta_r[u1][u2]
 """
 class RewardMachine:
 	# set U of <u1, u2, delta_u, delta_r>
@@ -44,7 +44,7 @@ class RewardMachine:
 
 	def __is_terminal(self, u1):
 		"""
-		Private function to be used to fill in the terminal states self.T when called in 
+		Private function to be used to fill in the terminal states self.T when called in
 		__load_reward_machines
 
 		state is terminal if any policy is optimal for that node, two cases are considered
@@ -132,7 +132,7 @@ class RewardMachine:
 		"""
 		return (u1 in self.T) # returns True if in array, else False
 
-	def get_next_state(self, u1, true_props):
+	def get_next_state(self, u1):
 		"""
 		checks which of the next states already stored in self.delta_u[u1]
 		validates evaluate_dnf(), if cant find any return dummy broken state
@@ -143,7 +143,7 @@ class RewardMachine:
 			for u2 in self.delta_u[u1]:
 				# if validates the formula (see in reward machine utils evaluate_dnf(formula, true_props))
 				# then its the next state for the agent (note this is not pruning the next possible states)
-				if evaluate_dnf(self.delta_u[u1][u2], true_props):
+				if evaluate_dnf(self.delta_u[u1][u2], self.state_label):
 					return u2
 		# if u1 is broken or none of the next states validates evaluate_dnf() then return broken
 		return self.u_broken
@@ -151,7 +151,7 @@ class RewardMachine:
 	def get_reward(self, u1, u2):
 		"""
 		general case would be get_reward(self, u1, u2, s1, action, s2)
-		but here its sufficient 
+		but here its sufficient
 
 		returns reward associated with transition as given
 		by delta_r[u1][u2] which is a ConstantRewardFunction object
@@ -162,6 +162,19 @@ class RewardMachine:
 			# here its sufficient with get_reward()
 			reward += self.delta_r[u1][u2].get_reward()
 		return reward
+
+
+        def append_state_label(symbol):
+            """
+            c -- Close door, o -- Open door, u -- Unlock door,
+            d -- Drop key, k -- Key picked,
+            """
+            if symbol == "c":
+                self.state_label = self.state_label.replace("o", "")
+            if symbol == "d":
+                self.state_label = self.state_label.replace("k", "")
+            else:
+                self.state_label += symbol
 
 # for debugging purposes
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from gym_minigrid.wrappers import RGBImgPartialObsWrapper, OneHotPartialObsWrapp
 # Agents
 from q_learning  import QParams, QAgent
 from qrm_learning  import QRMParams, QRMAgent
-from dqn_agent import DQNParams, DQNAgent 
+##from dqn_agent import DQNParams, DQNAgent
 
 # Algorithms
 def random_baseline(args):
@@ -169,6 +169,7 @@ def dqn_learning_baseline(args):
 			print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
 	env.close()
 	return avg_reward
+
 def qrm_learning(args):
 	"""
 	Runs an agent with QRM-learning algorihtm,
@@ -203,7 +204,7 @@ def qrm_learning(args):
 		num_step , accum_reward = 0, 0
 		done = False
 		s1 = env.reset()
-		u1 = self.rm.u0 # initial state from reward machine
+		u1 = agent.rm.u0 # initial state from reward machine
 		while not done:
 
 			if (num_step > MAX_NUM_STEPS): # To avoid it running forever
@@ -215,10 +216,12 @@ def qrm_learning(args):
 
 			# dirty workaround to get detect a transition in rm watching reward given by game
 			# since only when tasks are done in the correct order env_reward is >0 we can use this to detect a transition in rm
-			state_label  = ""
-			u2 = rm.get_next_state(u1, state_label)
-			reward = rm.delta_r[u1][u2]
-			
+
+                        agent.rm.append_state_label(symbol)
+
+                        u2 = agent.rm.get_next_state(u1)
+			reward = agent.rm.delta_r[u1][u2]
+
 			agent.learn(s1, action, reward, s2, done)
 			s1 = deepcopy(s2)
 			accum_reward += reward
