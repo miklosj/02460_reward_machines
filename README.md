@@ -1,5 +1,9 @@
 ﻿# Reinforcement Learning for Rewards Machines
  
+<p align="center">
+<img src="/figures/minigrid.png" width=150>
+</p>
+
  ## About
  Reinforcement Learning for Reward Machines. Relevant papers:
  * *Reward Machines: Exploiting Reward Function Structure in Reinforcement Learning* [[pdf]](https://arxiv.org/pdf/2010.03950.pdf)
@@ -14,42 +18,25 @@
 
  ## Usage
 * Install requirements: `pip install -r requirements.txt`
-* Syntax: `python main.py --algorithm=<algorithm> --environment=<environment> --num_steps=<num_steps>`
+* Syntax: `python main.py --algo=<algorithm> --env_name=<environment> --num_games=<num_steps>`
+* (Example): `python main.py --algo=qrm_learning --env_name=MiniGrid-DoorKey-5x5-v0 --num_games=100`
  
  ## Options
- * --algorithm: dqn (default dqn)
- * --environment: office (default office)
- * --num_steps: (default 10)
- 
+ * --algorithm: [`random_baseline, q_learning, qrm_learning`] (default `random_baseline`)
+ * --env_name: [`MiniGrid-DoorKey-5x5-v0, MiniGrid-DoorKey-8x8-v0` ...] (default `MiniGrid-Empty-8x8-v0`)
+ * --num_steps: integer (default 100)
+
  ## Structure
 
 ```
+--- requirements.txt
 --- /src
       |
       --- main.py
-      --- requirements.txt
-      --- __init__.py
-      --- /agents
-              |
-              --- __init__.py
-              --- dqn_algorithm.pu
-              --- run_dqn.py
-              --- utils.py
-              --- TabQ_learning.py
-              --- QRM.py
-              --- /DQRM
-                    |
-                    --- 
-      --- /RewardMachines
-              |
-              --- reward_machine.py
-              --- rm_utils.py
-              --- office.json
-      --- /envs
-              |
-              --- __init__.py
-              --- make_env.py
-              --- main.py
-              --- minecraft_RM.py
-              --- minecraft.py
-              --- office.py
+      --- rm_utils.py
+      --- q_learning.py
+      --- qrm_learning.py
+      --- reward_machine.py
+      --- utils.py
+      --- minigrid_reward_machines.json
+
