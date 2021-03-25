@@ -5,14 +5,24 @@ from collections import defaultdict
 from copy import deepcopy
 
 class QRMParams:
-	def __init__(self, gamma, eps_start, eps_dec, eps_end, n_actions, lr, env_idx=1):
+	def __init__(self, gamma, eps_start, eps_dec, eps_end, n_actions, lr, env_name):
 		self.gamma = gamma
 		self.epsilon = eps_start
 		self.eps_dec = eps_dec
 		self.eps_end = eps_end
 		self.n_actions = n_actions
 		self.lr = lr
-		self.env_idx = env_idx
+
+		# maps names of environents to index with which to look the RM in the json
+		# NOTE: It would be better to just parse json using env_names, but we can do later
+		env_name2index = {"DoorKey":1}
+
+		# Handles exception of reward machine not defined in .json for environement env_name
+		try:
+			self.env_idx = env_name2index[env_name.split("-")[1]]
+		except:
+			raise NotImplementedError("There is no reward machine defined in the .json for this environment. To add it, define it in the .json and include its index in the dictionary <env_name2_index>.")
+			exit(1)
 
 class QRMAgent(object):
 	def __init__(self, params):
@@ -24,6 +34,8 @@ class QRMAgent(object):
 		self.lr = params.lr
 
 		self.Q = defaultdict(int) # Q newtork
+
+
 		self.rm = RewardMachine("minigrid_reward_machines.json", params.env_idx) # load Reward Machine
 		self.encoding = []
 		self.label = ""

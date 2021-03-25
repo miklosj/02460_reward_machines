@@ -1,4 +1,5 @@
 from rm_utils import evaluate_dnf, parse_json_reward_machine
+import time
 
 """
 Class that assigns constant reward for any to pair of states and
@@ -132,7 +133,7 @@ class RewardMachine:
 		"""
 		return (u1 in self.T) # returns True if in array, else False
 
-	def get_next_state(self, u1):
+	def get_next_state(self, u1, true_props):
 		"""
 		checks which of the next states already stored in self.delta_u[u1]
 		validates evaluate_dnf(), if cant find any return dummy broken state
@@ -143,7 +144,11 @@ class RewardMachine:
 			for u2 in self.delta_u[u1]:
 				# if validates the formula (see in reward machine utils evaluate_dnf(formula, true_props))
 				# then its the next state for the agent (note this is not pruning the next possible states)
-				if evaluate_dnf(self.delta_u[u1][u2], self.state_label):
+				# print(self.delta_u[u1][u2])
+				# print(true_props)
+				# print()
+				# time.sleep(0.5)
+				if evaluate_dnf(self.delta_u[u1][u2], true_props):
 					return u2
 		# if u1 is broken or none of the next states validates evaluate_dnf() then return broken
 		return self.u_broken
@@ -163,18 +168,17 @@ class RewardMachine:
 			reward += self.delta_r[u1][u2].get_reward()
 		return reward
 
-
-        def append_state_label(symbol):
-            """
-            c -- Close door, o -- Open door, u -- Unlock door,
-            d -- Drop key, k -- Key picked,
-            """
-            if symbol == "c":
-                self.state_label = self.state_label.replace("o", "")
-            if symbol == "d":
-                self.state_label = self.state_label.replace("k", "")
-            else:
-                self.state_label += symbol
+	def append_state_label(symbol):
+		"""
+		c -- Close door, o -- Open door, u -- Unlock door,
+		d -- Drop key, k -- Key picked,
+		"""
+		if symbol == "c":
+			self.state_label = self.state_label.replace("o", "")
+		if symbol == "d":
+			self.state_label = self.state_label.replace("k", "")
+		else:
+			self.state_label += symbol
 
 # for debugging purposes
 if __name__ == "__main__":
