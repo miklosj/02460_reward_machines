@@ -64,7 +64,7 @@ def evaluate_dnf(formula, true_props):
 	if formula not in true_props:
 		return False
 
-def parse_json_reward_machine(json_file, task_idx):
+def parse_json_reward_machine(json_file, env_idx):
 	"""
 	extract reward machine from json_file
 
@@ -73,21 +73,24 @@ def parse_json_reward_machine(json_file, task_idx):
 	json_file: string
 		path to json file for the environment
 
-	task_idx: int
+	env_idx: int
 		index of the task to extract
 
 	Returns:
 	--------------
-	task_data: dictionary
+	env_data: dictionary
 		dictionary with parsed content
-		- task_data["task_id"]: index of task
-		- task_data["initial_state"]: u0, initial state of RM
-		- task_data["rm_states"]: list of <U, u0, delta_u, delta_r>
+		- env_data["env_id"]: index of task
+		- env_data["env_name"]: name of class of environment
+		- env_data["initial_state"]: u0, initial state of RM
+		- env_data["rm_states"]: list of <u1, u2, delta_u, delta_r> reward machine states
+								with defined delta_u[u1][u2] state transition function and 
+								delta_r[u1][u2] reward transition function
 	"""
 	with open(json_file) as file:
 		data = json.load(file)
-	task_data = data["tasks"][int(task_idx)-1]
-	return task_data
+	env_data = data["envs"][int(env_idx)-1]
+	return env_data
 
 # for debugging purposes
 if __name__ == "__main__":

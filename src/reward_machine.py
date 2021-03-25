@@ -16,12 +16,12 @@ class ConstantRewardFunction:
 	def get_type(self):
 		return self.type
 	
-	def get_reward(self, s1, action, s2):
+	def get_reward(self):
 		return self.c
 
 """
 Main RewardMachine Class, constructor loads everything for the environment
-selected in <file_rm> and for the task specified by the index <idx_rm>
+selected in <file_rm> and for the env specified by the index <idx_rm>
 
 Available methods:
 - is_terminal(u1): returns boolean
@@ -29,15 +29,15 @@ Available methods:
 - get_reward(u1, u2, s1, action, s2): returns constant reward as given by delta_r[u1][u2] 
 """
 class RewardMachine:
-	# <U, u0, delta_u, delta_r>
-	def __init__(self, file_rm, idx_rm):
+	# set U of <u1, u2, delta_u, delta_r>
+	def __init__(self, file_rm, idx_env):
 		self.U = []			# list of machine reward states
 		self.u0 = None		# initial reward machine state
 		self.delta_u = {}	# transition function for states
 		self.delta_r = {}	# transition function for rewards
 
 		self.file_rm = file_rm # file path to environment.json rm definitions
-		self.idx_rm = idx_rm   # index of RM to parse
+		self.idx_env= idx_env  # index of task RM to parse
 
 		self.T = set()				 # set of terminal states
 		self.__load_reward_machine() # load reward machine info
@@ -60,11 +60,10 @@ class RewardMachine:
 		NOTE: 3 conditions are checked here:
 			1. check only one transition possible (len(self.delta_u[u1]) == 1)
 			2. check if transtition is always True
-			3. check if constant reward
 		"""
 		if (len(self.delta_u[u1]) == 1):
 			u2 = list(self.delta_u[u1].keys())[0]
-			if (self.delta_u[u1][u2] == "True") and (self.delta_r[u1][u2].get_type() == "constant"):
+			if (self.delta_u[u1][u2] == "True"):
 				return True
 
 		# if none of the previous conditions where triggered then state is not terminal
@@ -91,12 +90,12 @@ class RewardMachine:
 	def __load_reward_machine(self):
 		"""
 		dictionary with parsed content
-		- reward_machine_dict["task_id"]: index of task
+		- reward_machine_dict["env_id"]: index of task
 		- reward_machine_dict["initial_state"]: u0, initial state of RM
-		- reward_machine_dict["rm_states"]: list of <U, u0, delta_u, delta_r>
+		- reward_machine_dict["rm_states"]: list of <u1, u2, delta_u, delta_r>
 		"""
 		# load the data for the reward machine
-		reward_machine_dict = parse_json_reward_machine(self.file_rm, self.idx_rm)
+		reward_machine_dict = parse_json_reward_machine(self.file_rm, self.idx_env)
 
 		## Setting the Deterministic finite automata (DFA)
 		# adding initial state
@@ -107,7 +106,7 @@ class RewardMachine:
 		for rm_state in reward_machine_dict["rm_states"]:
 			# {"U":0, "u0":0, "delta_u":"!c&!*", "delta_r": "ConstantRewardFunction(0)"}
 			# __add_transition(self, u1, u2, state_transition, reward_transition)
-			self.__add_transition(rm_state["U"], rm_state["u0"], rm_state["delta_u"], eval(rm_state["delta_r"]))
+			self.__add_transition(rm_state["u1"], rm_state["u2"], rm_state["delta_u"], eval(rm_state["delta_r"]))
 
 		# adding terminal states
 		for u1 in self.delta_u:
@@ -149,14 +148,19 @@ class RewardMachine:
 		# if u1 is broken or none of the next states validates evaluate_dnf() then return broken
 		return self.u_broken
 
-	def get_reward(self, u1, u2, s1, action, s2):
+	def get_reward(self, u1, u2):
 		"""
+		general case would be get_reward(self, u1, u2, s1, action, s2)
+		but here its sufficient 
+
 		returns reward associated with transition as given
 		by delta_r[u1][u2] which is a ConstantRewardFunction object
 		"""
 		reward = 0
 		if (u1 in self.delta_r) and (u2 in self.delta_r[u1]):
-			reward += self.delta_r[u1][u2].get_reward(s1, action, s2)
+			# in general get_reward(s1, action, s2)
+			# here its sufficient with get_reward()
+			reward += self.delta_r[u1][u2].get_reward()
 		return reward
 
 # for debugging purposes
@@ -166,8 +170,8 @@ if __name__ == "__main__":
 	start_t = time.time()
 	print("---- Debugging -----")
 	print("RewardMachine Class, to construct needs <json environment file>, <idx of task>")
-	file_rm = input("file (eg. office.json): ")
-	idx_rm = int(input("index of task (eg. 1-4 for office): "))
+	file_rm = "minigrid_reward_machines.json"
+	idx_rm = int(input("index of env (eg. 1 for MiniGridEmpty): "))
 	reward_machine = RewardMachine(file_rm, idx_rm)
 
 	print("reward_machine.is_terminal: ")
@@ -175,6 +179,6 @@ if __name__ == "__main__":
 	print("reward_machine.get_next_state: ")
 	print(reward_machine.get_next_state(0, "!D"))
 	print("reward_machine.get_reward: ")
-	print(reward_machine.get_reward(0,1,None,None,None))
+	print(reward_machine.get_reward(0,1))
 
 	print(f"---- Finished {time.time()-start_t} s ----")
