@@ -1,7 +1,7 @@
 ﻿# Reinforcement Learning for Rewards Machines
  
 <p align="center">
-<img src="/figures/minigrid.png" width=150>
+<img src="/figures/minigrid.PNG" width=250>
 </p>
 
  ## About
