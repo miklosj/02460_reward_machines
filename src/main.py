@@ -9,9 +9,11 @@ from gym_minigrid.wrappers import *
 # Agents
 from q_learning  import QParams, QAgent
 from qrm_learning  import QRMParams, QRMAgent
+from DQN.dqn_learning import DQNAgent
+from DDQN.ddqn_learning import DDQNAgent
 
 # utils functions (label function,....)
-from utils import *
+from utils import * 
 
 # Algorithms
 def random_baseline(args):
@@ -209,6 +211,197 @@ def qrm_learning(args):
     envListener.close()
     return avg_reward
 
+
+def dqn_learning(args):
+    """
+    Runs an agent with DQN-learning algorihtm,
+    Deep Q Network learning
+
+    Parameters:
+    ------------
+    args: dict
+        command line arguments (args.num_games, ...)
+
+    Returns:
+    ------------
+    avg_reward: list
+        list of average rewards every AVG_FREQ num episodes
+ 
+    """
+    algorithm = args.algo
+    # make environement and define observation format with Wrappers
+    env = gym.make(args.env_name)
+    
+    # fully obs wrapper for Event Listener
+    envListener = FullyObsWrapper(env)
+    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
+
+    # partial obs wrapper for agent 
+    # env = OneHotPartialObsWrapper(env)
+    env = ImgObsWrapper(env) # Get rid of the 'mission' field
+
+    env.seed(0)       # sets the seed
+    envListener.seed(0)
+
+    obs = env.reset()
+    obsListener = envListener.reset()
+    agent = DQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
+            n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
+            batch_size=32, replace=1000, eps_dec=1e-5,
+            chkpt_dir='models/', algo=algorithm, env_name=args.env_name)
+
+    load_checkpoint = False
+
+    if load_checkpoint:
+        agent.load_models()
+
+    printFile = open('results/' + 'results_' +algorithm+ args.env_name + '.txt', 'w')
+    #fname = agent.algo + '_' + agent.env_name + '_lr' + str(agent.lr) +'_' \
+    #        + str(n_games) + 'games'
+    #figure_file = 'plots/' + fname + '.png'
+
+    scores, avg_scores, std_scores, eps_history, steps_array = [], [], [], [], []
+
+    best_score = -np.inf
+
+    print('Episode\t','Steps\t','Score\t',
+            'Best_Score\t','Epsilon\t', file=printFile)
+
+    for i in range(args.num_games):
+        done = False
+        observation = env.reset()
+
+        n_steps = 0
+        score = 0
+        while not done:
+            action = agent.choose_action(observation)
+            observation_, reward, done, info = env.step(action)
+            score += reward
+
+            if not load_checkpoint:
+                agent.store_transition(observation, action,
+                                     reward, observation_, done)
+                agent.learn()
+
+            observation = deepcopy(observation_)
+            n_steps += 1
+        scores.append(score)
+        steps_array.append(n_steps)
+        avg_scores.append(np.mean(scores[-100:]))
+        std_scores = np.append(std_scores, np.std(scores[-100:]))
+
+        print('%d\t' %i, '%d\t' %n_steps,
+                '%.2f\t' %score,'%.2f\t' %best_score,
+                '%.2f\t' %agent.epsilon, file=printFile)
+
+        if score > best_score:
+            if not load_checkpoint:
+                agent.save_models()
+            best_score = score
+
+        eps_history.append(agent.epsilon)
+
+    #x = [i+1 for i in range(len(scores))]
+    #plot_learning_curve(x, avg_scores, std_scores, eps_history, figure_file)
+
+    return avg_scores
+
+
+
+def ddqn_learning(args):
+    """
+    Runs an agent with DQN-learning algorihtm,
+    Deep Q Network learning
+
+    Parameters:
+    ------------
+    args: dict
+        command line arguments (args.num_games, ...)
+
+    Returns:
+    ------------
+    avg_reward: list
+        list of average rewards every AVG_FREQ num episodes
+ 
+    """
+    algorithm = args.algo
+    # make environement and define observation format with Wrappers
+    env = gym.make(args.env_name)
+    
+    # fully obs wrapper for Event Listener
+    envListener = FullyObsWrapper(env)
+    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
+
+    # partial obs wrapper for agent 
+    # env = OneHotPartialObsWrapper(env)
+    env = ImgObsWrapper(env) # Get rid of the 'mission' field
+
+    env.seed(0)       # sets the seed
+    envListener.seed(0)
+
+    obs = env.reset()
+    obsListener = envListener.reset()
+    agent = DDQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
+            n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
+            batch_size=32, replace=1000, eps_dec=1e-5,
+            chkpt_dir='models/', algo=algorithm, env_name=args.env_name)
+
+    load_checkpoint = False
+
+    if load_checkpoint:
+        agent.load_models()
+
+    printFile = open('results/' + 'results_' +algorithm+ args.env_name + '.txt', 'w')
+    #fname = agent.algo + '_' + agent.env_name + '_lr' + str(agent.lr) +'_' \
+    #        + str(n_games) + 'games'
+    #figure_file = 'plots/' + fname + '.png'
+
+    scores, avg_scores, std_scores, eps_history, steps_array = [], [], [], [], []
+
+    best_score = -np.inf
+
+    print('Episode\t','Steps\t','Score\t',
+            'Best_Score\t','Epsilon\t', file=printFile)
+
+    for i in range(args.num_games):
+        done = False
+        observation = env.reset()
+
+        n_steps = 0
+        score = 0
+        while not done:
+            action = agent.choose_action(observation)
+            observation_, reward, done, info = env.step(action)
+            score += reward
+
+            if not load_checkpoint:
+                agent.store_transition(observation, action,
+                                     reward, observation_, done)
+                agent.learn()
+
+            observation = deepcopy(observation_)
+            n_steps += 1
+        scores.append(score)
+        steps_array.append(n_steps)
+        avg_scores.append(np.mean(scores[-100:]))
+        std_scores = np.append(std_scores, np.std(scores[-100:]))
+
+        print('%d\t' %i, '%d\t' %n_steps,
+                '%.2f\t' %score,'%.2f\t' %best_score,
+                '%.2f\t' %agent.epsilon, file=printFile)
+
+        if score > best_score:
+            if not load_checkpoint:
+                agent.save_models()
+            best_score = score
+
+        eps_history.append(agent.epsilon)
+
+    #x = [i+1 for i in range(len(scores))]
+    #plot_learning_curve(x, avg_scores, std_scores, eps_history, figure_file)
+
+    return avg_scores
+
 # Define some constants
 MAX_NUM_STEPS = 10000 # max number of steps within episode/games
 AVG_FREQ = 10        # compute reward avg of last AVG_FREQ num of episodes/games
@@ -237,6 +430,12 @@ elif args.algo == "q_learning":
 elif args.algo == "qrm_learning":
     avg_reward = qrm_learning(args=args)
 
+elif args.algo == "dqn_learning":
+    avg_reward = dqn_learning(args=args)
+
+elif args.algo == "ddqn_learning":
+    avg_reward = ddqn_learning(args=args)
+
 else:
     raise NotImplementedError("To be implemented")
     exit(1)
@@ -248,7 +447,7 @@ plt.xlabel("Episode")
 plt.ylabel("Avg reward")
 plt.title(f"Training Agent: {args.algo}, env: {args.env_name}")
 fig_name = str(args.algo) + "_" + str(args.env_name) + "_" + str(args.num_games) + ".png"
-plt.savefig(fig_name,  format="png")
+plt.savefig("plots/" + fig_name,  format="png")
 
 t1 = time.time()
 dt = t1 - t0

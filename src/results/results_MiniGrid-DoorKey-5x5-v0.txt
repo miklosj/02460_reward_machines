@@ -1,0 +1,4 @@
+Episode	 Steps	 Score	 Best_Score	 Epsilon	
+0	 250	 0.00	 -inf	 1.00	
+1	 250	 0.00	 0.00	 1.00	
+2	 250	 0.00	 0.00	 0.99	
