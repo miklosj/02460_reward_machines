@@ -85,10 +85,10 @@ def return_symbol(symbols_past, symbols_new, state_label):
             if dict_symbols[obj_id] == "k":
                 state_label+="k" # key was picked in new iteration
 
-            if (dict_symbols[obj_id] == "o") & (state_id in [1,2]): # door was locked/closed
+            if (dict_symbols[obj_id] == "o") and (state_id in [1,2]): # door was locked/closed
                 state_label += "o"
 
-            if (dict_symbols[obj_id] == "o") & (state_id == [0]): # door was open
+            if (dict_symbols[obj_id] == "o") and (state_id == [0]): # door was open
                 state_label = state_label.replace("o", "") # door was closed in new iteration
 
     new_symbols = symbols_new.difference(symbols_past)

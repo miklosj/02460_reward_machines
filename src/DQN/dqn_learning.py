@@ -2,6 +2,7 @@ import numpy as np
 import torch as T
 from DQN.deep_q_network import DeepQNetwork
 from DQN.replay_memory import ReplayBuffer
+from reward_machine import RewardMachine
 
 class DQNAgent(object):
     def __init__(self, gamma, epsilon, lr, n_actions, input_dims,
@@ -23,6 +24,13 @@ class DQNAgent(object):
         self.learn_step_counter = 0
 
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions)
+
+        temp = self.env_name.split("-")[1]
+        self.name2indx_dict = {"DoorKey":1, "Unlock":2, "Empty":3}
+        self.env_indx = self.name2indx_dict[temp]
+
+        self.rm = RewardMachine("minigrid_reward_machines.json", self.env_indx) # load Reward Machine
+        self.n_rm_states = self.rm.n_rm_states
 
         self.q_eval = DeepQNetwork(self.lr, self.n_actions,
                                     input_dims=self.input_dims,

@@ -101,8 +101,10 @@ class RewardMachine:
 		## Setting the Deterministic finite automata (DFA)
 		# adding initial state
 		self.u0 = reward_machine_dict["initial_state"]
-
-		# adding transitions
+        	# adding total number of reward machine states
+		self.n_rm_states = reward_machine_dict["n_rm_states"]
+       
+        # adding transitions
 		# NOTE: *eval() its so that it behaves as a tuple argument
 		for rm_state in reward_machine_dict["rm_states"]:
 			# {"U":0, "u0":0, "delta_u":"!c&!*", "delta_r": "ConstantRewardFunction(0)"}
