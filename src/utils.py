@@ -71,7 +71,7 @@ def return_symbol(symbols_past, symbols_new, state_label):
     #print(f"State label input {state_label}")
     #print(f"in past: {symbols_past}")
     #print(f"in new: {symbols_new}")
-    dict_symbols = {4:"o", 5:"k", 8:"g"}
+    dict_symbols = {4:"d", 5:"k", 8:"g"}
 
     # lost symbols in the new iteration of the agent
     lost_symbols = symbols_past.difference(symbols_new)
@@ -79,26 +79,36 @@ def return_symbol(symbols_past, symbols_new, state_label):
     if len(lost_symbols) != 0:
         for symbol in lost_symbols: # (a,a,a)
             #print(f"innerloop_past {symbol}")
-            obj_id, state_id = symbol
+            obj_id, state_id = list(symbol)
 
             # get type of object
             if dict_symbols[obj_id] == "k":
-                state_label+="k" # key was picked in new iteration
+                state_label += "k" # key was picked in new iteration
 
-            if (dict_symbols[obj_id] == "o") and (state_id in [1,2]): # door was locked/closed
-                state_label += "o"
+            if (dict_symbols[obj_id] == "d") and (state_id in [1,2]): # door closed/locked
+                state_label += "o" # open the door
 
-            if (dict_symbols[obj_id] == "o") and (state_id == [0]): # door was open
-                state_label = state_label.replace("o", "") # door was closed in new iteration
+            if (dict_symbols[obj_id] == "d") and (state_id == 0): # door was open
+                #state_label += "c"
+                state_label = state_label.replace("o", "") # close the door
 
-    new_symbols = symbols_new.difference(symbols_past)
+    gain_symbols = symbols_new.difference(symbols_past)
+    if len(gain_symbols) != 0:
+        for symbol in gain_symbols:
+            obj_id, state_id = list(symbol)
+
+            if dict_symbols[obj_id] == "k":
+                state_label = state_label.replace("k","") # key was dropped 
+                #state_label += "d"
+
+    #new_symbols = symbols_past.difference(symbols_new)
     #print(f"gained symbols: {new_symbols}")
-    if len(new_symbols) != 0:
-        for symbol in new_symbols: # (a,a,a)
+    #if len(new_symbols) != 0:
+    #    for symbol in new_symbols: # (a,a,a)
             #print(f"innerloop_new {symbol}")
-            obj_id, state_id = symbol
+    #        obj_id, state_id = symbol
 
             # append its associated symbol, as it is a lost
-            state_label = state_label.replace(dict_symbols[obj_id],"")
+    #        state_label = state_label.replace(dict_symbols[obj_id],"")
     #print(f"State label output {state_label}")
     return state_label

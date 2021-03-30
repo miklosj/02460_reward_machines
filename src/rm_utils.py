@@ -27,7 +27,8 @@ def evaluate_dnf(formula, true_props):
 	-------------
 	boolean
 	"""
-	# split AND conditions 
+	#print(formula, true_props)
+    # split AND conditions 
 	if "&" in formula:
 		# evaluate subformulas
 		for subformula in formula.split("&"):
@@ -83,7 +84,8 @@ def parse_json_reward_machine(json_file, env_idx):
 		- env_data["env_id"]: index of task
 		- env_data["env_name"]: name of class of environment
 		- env_data["initial_state"]: u0, initial state of RM
-		- env_data["rm_states"]: list of <u1, u2, delta_u, delta_r> reward machine states
+		- env_data["n_rm_states"] total number of reward machines states used for DQRM/DQRM learning
+        - env_data["rm_states"]: list of <u1, u2, delta_u, delta_r> reward machine states
 								with defined delta_u[u1][u2] state transition function and 
 								delta_r[u1][u2] reward transition function
 	"""

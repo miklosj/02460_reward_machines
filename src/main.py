@@ -141,19 +141,20 @@ def qrm_learning(args):
     env = gym.make(args.env_name)
     
     # fully obs wrapper for Event Listener
-    envListener = FullyObsWrapper(env)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
+    #envListener = FullyObsWrapper(env)
+    #envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
     # env = OneHotPartialObsWrapper(env)
-    env = RGBImgPartialObsWrapper(env)
+    #env = RGBImgPartialObsWrapper(env)
+    env = FullyObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    envListener.seed(0)
+    #envListener.seed(0)
 
     obs = env.reset() # This now produces an RGB tensor only
-    obsListener = envListener.reset()
+    #obsListener = envListener.reset()
 
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
@@ -166,10 +167,10 @@ def qrm_learning(args):
         num_step , accum_reward = 0, 0
         done = False
         s1 = env.reset()
-
-        obsListener = envListener.reset()
+        print("Running episode... ")
+        #obsListener = envListener.reset()
         state_label = ""
-        special_symbols = get_special_symbols(obsListener)
+        special_symbols = get_special_symbols(s1)
         u1 = agent.rm.u0 # initial state from reward machine
         while not done:
 
@@ -182,35 +183,34 @@ def qrm_learning(args):
 
             # dirty  hack, we ran two parallel envs, one for the agent and one fully observable for the 
             # event listener that returns the label function used to make transitions of the Reward Machine 
-            obsListener_ , _, _, _ = envListener.step(action)
-            special_symbols_ = get_special_symbols(obsListener_)
+            #obsListener_ , _, _, _ = envListener.step(action)
+            special_symbols_ = get_special_symbols(s2)
             state_label = return_symbol(special_symbols, special_symbols_, state_label)
 
             u2 = agent.rm.get_next_state(u1, state_label)
              
-            print(f"state_label: {state_label}")
-            print(f"reward_machine_state: {u1}, {u2}")
-
+            #print(f"state_label: {state_label}")
+            #print(f"reward_machine_state: {u1}, {u2}")
+            #print(u1,u2)
             reward_rm = agent.rm.delta_r[u1][u2].get_reward()
 
             agent.learn(s1, action, reward_rm, s2, done)
-
             # update params
             u1 = u2
             special_symbols = special_symbols_
-            obsListener = deepcopy(obsListener_)
+            #obsListener = deepcopy(obsListener_)
 
-            s1 = deepcopy(s2)
+            s1 = s2
             accum_reward += reward
             num_step += 1
 
-        reward_history.append(accum_reward/num_step)
+        reward_history.append(accum_reward)
         avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
 
         if (i % PRINT_FREQ == 0): # Print training every PRINT_FREQ episodes
             print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
     env.close()
-    envListener.close()
+    #envListener.close()
     return avg_reward
 
 def ddqn_learning(args):
@@ -371,7 +371,6 @@ def dqn_learning(args):
         state_label = ""
         #special_symbols = get_special_symbols(obsListener)
         special_symbols = get_special_symbols(observation)
-        
         u1 = agent.rm.u0 # initial state from reward machine
 
         n_steps = 0
@@ -496,6 +495,7 @@ def dqrm_learning(args):
 
     for i in range(args.num_games):
         done = False
+        print("Running episode: ", i)
         observation = env.reset()
 
         #obsListener = envListener.reset()
