@@ -6,6 +6,7 @@ from DQRM.replay_memory import ReplayBuffer
 import torch.nn as nn
 import torch.optim as optim
 from reward_machine import RewardMachine
+from utils import *
 
 class DQRMAgent(nn.Module):
     def __init__(self, gamma, epsilon, lr, n_actions, input_dims,
@@ -26,6 +27,8 @@ class DQRMAgent(nn.Module):
         self.chkpt_dir = chkpt_dir
         self.action_space = [i for i in range(n_actions)]
         self.learn_step_counter = 0
+        
+        self.ls = logical_symbols()
 
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
@@ -59,22 +62,19 @@ class DQRMAgent(nn.Module):
 
         return action
 
-    def store_transition(self, state, rmstate, action, reward, state_, rmstate_, done):
-        self.memory.store_transition(state, rmstate, action, reward, state_, rmstate_, done)
+    def store_transition(self, state, action, state_label, state_, done):
+        self.memory.store_transition(state, action, state_label, state_, done)
 
     def sample_memory(self):
-        state, rmstate, action, reward, new_state, new_rmstate, done = \
+        state, action, state_labels, new_state, done = \
                                 self.memory.sample_buffer(self.batch_size)
 
         states = T.tensor(state).to(self.device)
-        rmstates = T.tensor(rmstate).to(self.device)
-        rewards = T.tensor(reward).to(self.device)
         dones = T.tensor(done).to(self.device)
         actions = T.tensor(action).to(self.device)
         states_ = T.tensor(new_state).to(self.device)
-        rmstates_ = T.tensor(new_rmstate).to(self.device)
 
-        return states, rmstates, actions, rewards, states_, rmstates_, dones
+        return states, actions, state_labels, states_, dones
 
     def replace_target_network(self):
         if self.learn_step_counter % self.replace_target_cnt == 0:
@@ -94,12 +94,31 @@ class DQRMAgent(nn.Module):
             self.q_eval.load_checkpoint()
             self.q_next.load_checkpoint()
 
+    def rm_batch_u2rew(self, u1_batch, states, states_, state_labels):
+        # Detach tensors from gpu and turn to numpy to use 
+        # the needed functions 
+        u1_batch = u1_batch.cpu().detach().numpy()
+        states = states.cpu().detach().numpy()
+        states_ = states_.cpu().detach().numpy()
+        # Initialize u2 and rewards tensors
+        u2_batch = T.zeros((self.batch_size,1)).to(self.device)
+        rewards = T.zeros(self.batch_size).to(self.device)
+        for i in range(self.batch_size):
+            special_symbols = self.ls.get_special_symbols(states[i])
+            special_symbols_ = self.ls.get_special_symbols(states_[i])
+            state_label = self.ls.return_symbol(special_symbols, special_symbols_, state_labels[i])
+            u2_batch[i] = self.rm.get_next_state(int(u1_batch[i]), state_label)
+            #print("####\n",u1_batch[i], u2_batch[i], state_label,"\n####\n")
+            rewards[i] = self.rm.delta_r[int(u1_batch[i])][int(u2_batch[i])].get_reward()
+            #print(state_label,u2_batch[i],rewards[i])
+        return u2_batch, rewards
+
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
             return
 
 
-        states, rmstates, actions, rewards, states_, rmstates_, dones = self.sample_memory()
+        states, actions, state_labels, states_, dones = self.sample_memory()
         
         self.q_eval.optimizer.zero_grad()
 
@@ -107,19 +126,27 @@ class DQRMAgent(nn.Module):
 
         indices = np.arange(self.batch_size)
 
-        q_pred = self.q_eval.forward(states, rmstates)[indices, actions].to(self.device)
-        q_next = self.q_next.forward(states_, rmstates_).max(dim=1)[0].to(self.device)
-
-        #rm_index = T.where(rmstates==(self.n_rm_states-1))[0]
-        rm_index_ = T.where(rmstates_==(self.n_rm_states-1))[0]
+        for rmstate in range(self.n_rm_states):
         
-        #q_pred[rm_index] = 1.0 
-        q_next[dones] = 0.0
-        q_target = rewards + self.gamma*q_next
+            u1_batch = T.full((self.batch_size, 1), rmstate).to(self.device)
 
-        loss = self.q_eval.loss(q_target, q_pred).to(self.device)
+            u2_batch, rewards = self.rm_batch_u2rew(u1_batch, states, states_, state_labels)
+            #print("\n####\n",u1_batch, "\n",u2_batch, "\n",rewards,"\n####")
+            q_pred = self.q_eval.forward(states, u1_batch)[indices, actions].to(self.device)
+            q_next = self.q_next.forward(states_, u2_batch).max(dim=1)[0].to(self.device)
+            #print("\n####\n",q_pred.size(), q_next.size(),"\n####")
+
+            #rm_index = T.where(rmstates==(self.n_rm_states-1))[0]
+            #rm_index_ = T.where(rmstates_==(self.n_rm_states-1))[0]
+        
+            #q_pred[rm_index] = 1.0 
+            #q_next[dones] = 0.0
+            q_target = rewards + self.gamma*q_next
+            #print("\n####\n", rewards.size(), u2_batch.size(), q_pred.size(), q_next.size(), q_target.size(), "\n####") 
+            loss = self.q_eval.loss(q_target, q_pred).to(self.device)
         loss.backward()
         self.q_eval.optimizer.step()
+        
         self.learn_step_counter += 1
         
         self.decrement_epsilon()

@@ -153,7 +153,7 @@ class RewardMachine:
 				if evaluate_dnf(self.delta_u[u1][u2], true_props):
 					return u2
 		# if u1 is broken or none of the next states validates evaluate_dnf() then return broken
-			print(u1,u2,self.delta_u[u1][u2],true_props)
+			#print(u1,u2,self.delta_u[u1][u2],true_props)
 			return self.u_broken
 
 	def get_reward(self, u1, u2):
