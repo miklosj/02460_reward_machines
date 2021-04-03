@@ -7,8 +7,8 @@ from copy import deepcopy
 from gym_minigrid.wrappers import *
 
 # Agents
-from q_learning  import QParams, QAgent
-from qrm_learning  import QRMParams, QRMAgent
+from Q.q_learning  import QParams, QAgent
+from QRM.qrm_learning  import QRMParams, QRMAgent, QRM_network
 
 # utils functions (label function,....)
 from utils import *
@@ -154,8 +154,9 @@ def qrm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QRMParams(gamma=0.99, eps_start=1.0, eps_dec=5e-6, eps_end=0.01, n_actions=7, lr=5e-3, env_name=args.env_name)
+    params = QRMParams(gamma=0.99, eps_start=0.01, eps_dec=5e-6, eps_end=0.01, n_actions=7, lr=5e-3, env_name=args.env_name)
     agent = QRMAgent(params)
+    unique_states = agent.rm.unique_states[:-1]
 
     print("Episode num_steps avg_Reward")
     for i in range(args.num_games):
@@ -174,7 +175,7 @@ def qrm_learning(args):
                 raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
                 exit(1)
 
-            action = agent.choose_action(s1)
+            action = agent.choose_action(s1, u1)
             s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
 
             # dirty  hack, we ran two parallel envs, one for the agent and one fully observable for the 
@@ -183,19 +184,25 @@ def qrm_learning(args):
             special_symbols_ = get_special_symbols(obsListener_)
             state_label = return_symbol(special_symbols, special_symbols_, state_label)
 
-            #print(f"state_label: {state_label}")
-            #print(f"reward_machine_state: {u1}")
+            # Paralell learning. For this transition s1 -> s2
+            # learn as if you were on every possible state of the RM
+            for u1_temp in unique_states:
+                if (u1_temp != u1):
+                    u2_temp = agent.rm.get_next_state(u1_temp, state_label)
+                    if u2_temp not in unique_states: # sometimes the transition is broken??
+                        u2_temp = u1_temp
 
+                    reward_rm = agent.rm.delta_r[u1_temp][u2_temp].get_reward()
+                    agent.learn(s1, u1_temp, action, reward_rm, s2, u2_temp)
+
+            # the actual reward machine state
             u2 = agent.rm.get_next_state(u1, state_label)
-            reward_rm = agent.rm.delta_r[u1][u2].get_reward()
-
-            agent.learn(s1, action, reward_rm, s2, done)
+            agent.learn(s1, u1, action, reward_rm, s2, u2)
 
             # update params
             u1 = u2
             special_symbols = special_symbols_
             obsListener = deepcopy(obsListener_)
-
             s1 = deepcopy(s2)
             accum_reward += reward
             num_step += 1

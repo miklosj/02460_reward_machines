@@ -68,17 +68,12 @@ def return_symbol(symbols_past, symbols_new, state_label):
         e.g if agent has dropped key then state_label: "k"-> "", as k is no longer true
     """
 
-    #print(f"State label input {state_label}")
-    #print(f"in past: {symbols_past}")
-    #print(f"in new: {symbols_new}")
     dict_symbols = {4:"o", 5:"k", 8:"g"}
 
     # lost symbols in the new iteration of the agent
     lost_symbols = symbols_past.difference(symbols_new)
-    #print(f"lost symbols: {lost_symbols}")
     if len(lost_symbols) != 0:
-        for symbol in lost_symbols: # (a,a,a)
-            #print(f"innerloop_past {symbol}")
+        for symbol in lost_symbols: # (a,a)
             obj_id, state_id = symbol
 
             # get type of object
@@ -92,13 +87,10 @@ def return_symbol(symbols_past, symbols_new, state_label):
                 state_label = state_label.replace("o", "") # door was closed in new iteration
 
     new_symbols = symbols_new.difference(symbols_past)
-    #print(f"gained symbols: {new_symbols}")
     if len(new_symbols) != 0:
-        for symbol in new_symbols: # (a,a,a)
-            #print(f"innerloop_new {symbol}")
+        for symbol in new_symbols: # (a,a)
             obj_id, state_id = symbol
 
             # append its associated symbol, as it is a lost
             state_label = state_label.replace(dict_symbols[obj_id],"")
-    #print(f"State label output {state_label}")
     return state_label

@@ -37,6 +37,7 @@ class RewardMachine:
 		self.delta_u = {}	# transition function for states
 		self.delta_r = {}	# transition function for rewards
 
+		self.unique_states = [] # list to store unique rm_states
 		self.file_rm = file_rm # file path to environment.json rm definitions
 		self.idx_env= idx_env  # index of task RM to parse
 
@@ -71,6 +72,12 @@ class RewardMachine:
 		return False
 
 	def __add_transition(self, u1, u2, state_transition, reward_transition):
+		# append the new rm states to unique_states list
+		if u1 not in self.unique_states:
+			self.unique_states.append(u1)
+		if u2 not in self.unique_states:
+			self.unique_states.append(u2)
+
 		# add <u1, u2, state_transition, reward_transition>
 		# add state if not in state space already
 		if (u1, u2) not in self.U:
@@ -144,10 +151,6 @@ class RewardMachine:
 			for u2 in self.delta_u[u1]:
 				# if validates the formula (see in reward machine utils evaluate_dnf(formula, true_props))
 				# then its the next state for the agent (note this is not pruning the next possible states)
-				# print(self.delta_u[u1][u2])
-				# print(true_props)
-				# print()
-				# time.sleep(0.5)
 				if evaluate_dnf(self.delta_u[u1][u2], true_props):
 					return u2
 		# if u1 is broken or none of the next states validates evaluate_dnf() then return broken
