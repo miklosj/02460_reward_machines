@@ -34,9 +34,18 @@
       |
       --- main.py
       --- rm_utils.py
-      --- q_learning.py
-      --- qrm_learning.py
-      --- reward_machine.py
       --- utils.py
+      --- reward_machine.py
       --- minigrid_reward_machines.json
-
+      --- /Q
+            |
+            --- __init__.py
+            --- q_learning.py
+      --- /QRM
+            |
+            --- __init__.py
+            --- qrm_learning.py
+      --- /DQN
+      --- /DDQN
+      --- /DQRM
+```
