@@ -1,11 +1,10 @@
 {
-
 	"envs":	[
 				{
 					"env_id":1,
 					"env_name":"MiniGrid-DoorKey",
 					"initial_state":0,
-                    "n_rm_states":4,
+          "n_rm_states":4,
 					"rm_states": [
 									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
@@ -21,7 +20,7 @@
 					"env_id":2,
 					"env_name":"MiniGrid-Unlock",
 					"initial_state":0,
-                    "n_rm_states":3,
+          "n_rm_states":3,
 					"rm_states": [
 									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(1)"},
@@ -35,7 +34,7 @@
 					"env_id":3,
 					"env_name":"MiniGrid-Empty",
 					"initial_state":0,
-                    "n_rm_states":2,
+          "n_rm_states":2,
 					"rm_states": [
 									{"u1":0, "u2":0, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
 									{"u1":0, "u2":1, "delta_u":"g", "delta_r": "ConstantRewardFunction(0)"},
