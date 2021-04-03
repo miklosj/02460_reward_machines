@@ -108,8 +108,10 @@ class RewardMachine:
 		## Setting the Deterministic finite automata (DFA)
 		# adding initial state
 		self.u0 = reward_machine_dict["initial_state"]
-
-		# adding transitions
+        	# adding total number of reward machine states
+		self.n_rm_states = reward_machine_dict["n_rm_states"]
+       
+        # adding transitions
 		# NOTE: *eval() its so that it behaves as a tuple argument
 		for rm_state in reward_machine_dict["rm_states"]:
 			# {"U":0, "u0":0, "delta_u":"!c&!*", "delta_r": "ConstantRewardFunction(0)"}
@@ -154,7 +156,8 @@ class RewardMachine:
 				if evaluate_dnf(self.delta_u[u1][u2], true_props):
 					return u2
 		# if u1 is broken or none of the next states validates evaluate_dnf() then return broken
-		return self.u_broken
+			#print(u1,u2,self.delta_u[u1][u2],true_props)
+			return self.u_broken
 
 	def get_reward(self, u1, u2):
 		"""
