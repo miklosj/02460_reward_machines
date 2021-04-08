@@ -96,14 +96,14 @@ def return_symbol(symbols_past, symbols_new, state_label):
         e.g if agent has dropped key then state_label: "k"-> "", as k is no longer true
     """
 
-    dict_symbols = {4:"o", 5:"k", 8:"g"}
+    dict_symbols = {4:"o", 5:"k", 8:"g", 10:"a"}
 
     # lost symbols in the new iteration of the agent
     lost_symbols = symbols_past.difference(symbols_new)
     if len(lost_symbols) != 0:
         for symbol in lost_symbols: # (a,a)
             obj_id, state_id = symbol
-
+            print(obj_id)
             # get type of object
             if dict_symbols[obj_id] == "k":
                 state_label+="k" # key was picked in new iteration

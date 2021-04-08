@@ -16,8 +16,8 @@ pip3 install gym-minigrid --user
 pip3 install gym --user
 echo "Running script..."
 
-ALGO_LIST=("dqrm_learning")
-ENV_NAME_LIST=("MiniGrid-DoorKey-5x5-v0")
+ALGO_LIST=("dcrm_learning")
+ENV_NAME_LIST=("MiniGrid-DoorKey-8x8-v0")
 NUM_GAMES=1000
 
 for ALGO in $ALGO_LIST

@@ -32,14 +32,17 @@ class DeepQNetwork(nn.Module):
         self.loss = nn.MSELoss()
         
         # device nn.Module function already defined in Agent
-        #self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-        #self.to(self.device)
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.to(self.device)
 
     def forward(self, state, rm_state):
+        
         # Flatten the observation [BS, 7, 7, 3] --> [BS, 147]
-        flat_state = state.view(state.size()[0], -1)
+        flat_state = state.view(state.size()[0], -1).to(self.device)
+
         # Initialize the actions tensor [BS, n_actions=7] 
-        actions = T.zeros(state.size()[0], self.n_actions)
+        actions = T.zeros(state.size()[0], self.n_actions, requires_grad=False).to(self.device)
+        
         for i in range(self.n_rm_states):
             # Loop over the rm_states and feed forward each observation to its
             # correspondant rmstate neural network
@@ -48,6 +51,7 @@ class DeepQNetwork(nn.Module):
                 actions[rm_index] = self.rm_network[i](flat_state[rm_index])
             except:
                 pass
+        
         return actions
 
     def save_checkpoint(self):
