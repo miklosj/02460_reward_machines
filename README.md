@@ -22,7 +22,7 @@
 * (Example): `python main.py --algo=qrm_learning --env_name=MiniGrid-DoorKey-5x5-v0 --num_games=100`
  
  ## Options
- * --algorithm: [`random_baseline, q_learning, qrm_learning`] (default `random_baseline`)
+ * --algorithm: [`random_baseline, q_learning, qrm_learning, crm_learning`] (default `random_baseline`)
  * --env_name: [`MiniGrid-DoorKey-5x5-v0, MiniGrid-DoorKey-8x8-v0` ...] (default `MiniGrid-Empty-8x8-v0`)
  * --num_steps: integer (default 100)
 
@@ -45,6 +45,10 @@
             |
             --- __init__.py
             --- qrm_learning.py
+      --- /CRM
+            |
+            --- __init__.py
+            --- crm_learning.py
       --- /DQN
       --- /DDQN
       --- /DQRM
