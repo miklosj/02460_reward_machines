@@ -95,11 +95,12 @@ def return_symbol(symbols_past, symbols_new, state_label):
         e.g if agent has picked key then state_label: ""-> "k"
         e.g if agent has dropped key then state_label: "k"-> "", as k is no longer true
     """
-
+    print(f"symbols before: {state_label}")
     dict_symbols = {4:"o", 5:"k", 8:"g"}
 
     # lost symbols in the new iteration of the agent
     lost_symbols = symbols_past.difference(symbols_new)
+    print(f"lost symbols: {lost_symbols}")
     if len(lost_symbols) != 0:
         for symbol in lost_symbols: # (a,a)
             obj_id, state_id = symbol
@@ -114,7 +115,11 @@ def return_symbol(symbols_past, symbols_new, state_label):
             if (dict_symbols[obj_id] == "o") & (state_id == [0]): # door was open
                 state_label = state_label.replace("o", "") # door was closed in new iteration
 
+            if dict_symbols[obj_id] == "g": # if goal disappear then agent is on top
+                state_label+="g"
+
     new_symbols = symbols_new.difference(symbols_past)
+    print(f"new symbols: {new_symbols}")
     if len(new_symbols) != 0:
         for symbol in new_symbols: # (a,a)
             obj_id, state_id = symbol
@@ -128,5 +133,5 @@ def return_symbol(symbols_past, symbols_new, state_label):
 
             if (dict_symbols[obj_id] == "o") & (state_id == [0]): # door is open now
                 state_label += "o"
-                
+    print(f"symbols after: {state_label}")
     return state_label

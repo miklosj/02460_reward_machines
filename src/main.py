@@ -2,6 +2,7 @@ import time, gym, argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
+import pandas as pd
 
 # Wrappers to define Observartion output
 from gym_minigrid.wrappers import *
@@ -140,20 +141,20 @@ def qrm_learning(args):
     env = gym.make(args.env_name)
     
     # fully obs wrapper for Event Listener
-    #envListener = FullyObsWrapper(env)
-    #envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
+    envListener = deepcopy(env)
+    envListener = FullyObsWrapper(envListener)
+    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
-    # env = OneHotPartialObsWrapper(env)
-    #env = RGBImgPartialObsWrapper(env)
-    env = FullyObsWrapper(env)
+    env = RGBImgPartialObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
-    env.seed(0)       # sets the seed
-    #envListener.seed(0)
+    # sets the seed
+    env.seed(0)       
+    envListener.seed(0)
 
-    obs = env.reset() # This now produces an RGB tensor only
-    #obsListener = envListener.reset()
+    obs = env.reset()
+    obsListener = envListener.reset()
 
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
@@ -169,11 +170,13 @@ def qrm_learning(args):
     for i in range(args.num_games):
         num_step , accum_reward = 0, 0
         done = False
+
+        # reset the two envs
         s1 = env.reset()
-        
-        #obsListener = envListener.reset()
-        state_label = ""
-        special_symbols = ls.get_special_symbols(s1)
+        obsListener = envListener.reset()
+
+        state_label = "" # reset state_label
+        special_symbols = ls.get_special_symbols(obsListener)
         u1 = agent.rm.u0 # initial state from reward machine
         while not done:
 
@@ -183,28 +186,38 @@ def qrm_learning(args):
 
             action = agent.choose_action(s1, u1)
             s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
+            u2 = agent.rm.get_next_state(u1, state_label)
 
             # dirty  hack, we ran two parallel envs, one for the agent and one fully observable for the 
             # event listener that returns the label function used to make transitions of the Reward Machine 
-            """
-            #obsListener_ , _, _, _ = envListener.step(action)
-            special_symbols_ = ls.get_special_symbols(s2)
+            obsListener_ , _, _, _ = envListener.step(action)
+            special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
-            u2 = agent.rm.get_next_state(u1, state_label)
+            for u1_temp in range(len(unique_states)):
+                u2_temp = agent.rm.get_next_state(u1_temp, state_label)
+                if (u1_temp == u1): # this is the transition performed
+                    pass
+                else:
+                    reward_rm = agent.rm.delta_r[u1_temp][u2_temp].get_reward()
+                    agent.learn(s1, u1_temp, action, reward_rm, s2, u2_temp)
              
             #print(f"state_label: {state_label}")
             #print(f"reward_machine_state: {u1}, {u2}")
             #print(u1,u2)
-            reward_rm = agent.rm.delta_r[u1][u2].get_reward()
 
-            agent.learn(s1, action, reward_rm, s2, done)
+            reward_rm = agent.rm.delta_r[u1][u2].get_reward()
+            agent.learn(s1, u1, action, reward_rm, s2, u2)
+
             # update params
             u1 = u2
+            s1 = deepcopy(s2)
             special_symbols = special_symbols_
-            #obsListener = deepcopy(obsListener_)
+            obsListener = deepcopy(obsListener_)
 
-            s1 = s2
+            accum_reward += reward # note this reward comes from environement and not reward machine
+            num_step += 1
+            
             """
             obsListener_ , _, _, _ = envListener.step(action)
             special_symbols_ = get_special_symbols(obsListener_)
@@ -230,8 +243,10 @@ def qrm_learning(args):
             special_symbols = special_symbols_
             obsListener = deepcopy(obsListener_)
             s1 = deepcopy(s2)
+
             accum_reward += reward
             num_step += 1
+            """
 
         reward_history.append(accum_reward)
         avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
@@ -239,7 +254,7 @@ def qrm_learning(args):
         if (i % PRINT_FREQ == 0): # Print training every PRINT_FREQ episodes
             print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
     env.close()
-    #envListener.close()
+    envListener.close()
     return avg_reward
 
 
@@ -673,15 +688,20 @@ else:
     raise NotImplementedError("To be implemented")
     exit(1)
 
+# save dataframe
+name = str(args.algo) + "_" + str(args.env_name) + "_" + str(args.num_games)
+
+episodes = np.array([i for i in range(args.num_games) if i%PRINT_FREQ == 0])
+df = pd.DataFrame(data= {"episodes": episodes, "avg_reward": avg_reward})
+df.to_csv(path_or_buf=name + ".csv")
 
 # Plot results
+fig_name = name + ".png"
 plt.plot(avg_reward)
 plt.xlabel("Episode")
 plt.ylabel("Avg reward")
 plt.title(f"Training Agent: {args.algo}, env: {args.env_name}")
-fig_name = str(args.algo) + "_" + str(args.env_name) + "_" + str(args.num_games) + ".png"
-plt.savefig("plots/" + fig_name,  format="png")
-
+plt.savefig(fig_name,  format="png")
 t1 = time.time()
 dt = t1 - t0
 print("--- finished %s ---" % round(dt, 3))
