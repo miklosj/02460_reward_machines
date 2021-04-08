@@ -10,6 +10,7 @@ from gym_minigrid.wrappers import *
 # Agents
 from Q.q_learning  import QParams, QAgent
 from QRM.qrm_learning  import QRMParams, QRMAgent, QRM_network
+from CRM.crm_learning  import CRMParams, CRMAgent
 from DQN.dqn_learning import DQNAgent
 from DDQN.ddqn_learning import DDQNAgent
 from DQRM.dqrm_learning import DQRMAgent
@@ -65,6 +66,7 @@ def random_baseline(args):
             print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
     env.close()
     return avg_reward
+
 def q_learning_baseline(args):
     """
     Runs an agent with Q-learning algorihtm, so as to use as baseline
@@ -81,9 +83,8 @@ def q_learning_baseline(args):
     """
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    # env = RGBImgPartialObsWrapper(env) # Get pixel observations
-    env = OneHotPartialObsWrapper(env)
-    # env = ImgObsWrapper(env) # Get rid of the 'mission' field
+    env = RGBImgPartialObsWrapper(env) # Get pixel observations
+    env = ImgObsWrapper(env) # Get rid of the 'mission' field
     env.seed(0)       # sets the seed
     obs = env.reset() # This now produces an RGB tensor only
 
@@ -257,6 +258,106 @@ def qrm_learning(args):
     envListener.close()
     return avg_reward
 
+def crm_learning(args):
+    """
+    Runs an agent with CRM-learning algorihtm,
+    Q learning with counterfactual experiences for reward Machines
+
+    Parameters:
+    ------------
+    args: dict
+        command line arguments (args.num_games, ...)
+
+    Returns:
+    ------------
+    avg_reward: list
+        list of average rewards every AVG_FREQ num episodes
+    """
+    # make environement and define observation format with Wrappers
+    env = gym.make(args.env_name)
+    
+    # fully obs wrapper for Event Listener
+    envListener = deepcopy(env)
+    envListener = FullyObsWrapper(envListener)
+    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
+
+    # partial obs wrapper for agent 
+    env = RGBImgPartialObsWrapper(env)
+    env = ImgObsWrapper(env) # Get rid of the 'mission' field
+
+    # sets the seed
+    env.seed(0)       
+    envListener.seed(0)
+
+    obs = env.reset()
+    obsListener = envListener.reset()
+
+    # Vector for storing intermediate results
+    reward_history, avg_reward = [], []
+
+    params = CRMParams(gamma=0.99, eps_start=0.01, eps_dec=5e-6, eps_end=0.01, n_actions=7, lr=5e-3, env_name=args.env_name)
+    agent = CRMAgent(params)
+    unique_states = agent.rm.unique_states[:-1]
+
+    # logical symbols functions class
+    ls = logical_symbols()
+    
+    print("Episode num_steps avg_Reward")
+    for i in range(args.num_games):
+        num_step , accum_reward = 0, 0
+        done = False
+
+        # reset the two envs
+        s1 = env.reset()
+        obsListener = envListener.reset()
+
+        state_label = "" # reset state_label
+        special_symbols = ls.get_special_symbols(obsListener)
+        u1 = agent.rm.u0 # initial state from reward machine
+        while not done:
+
+            if (num_step > MAX_NUM_STEPS): # To avoid it running forever
+                raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
+                exit(1)
+
+            action = agent.choose_action(s1, u1)
+            s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
+            u2 = agent.rm.get_next_state(u1, state_label)
+
+            # dirty  hack, we ran two parallel envs, one for the agent and one fully observable for the 
+            # event listener that returns the label function used to make transitions of the Reward Machine 
+            obsListener_ , _, _, _ = envListener.step(action)
+            special_symbols_ = ls.get_special_symbols(obsListener_)
+            state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
+
+            for u1_temp in range(len(unique_states)):
+                u2_temp = agent.rm.get_next_state(u1_temp, state_label)
+                if (u1_temp == u1): # this is the transition performed
+                    pass
+                else:
+                    reward_rm = agent.rm.delta_r[u1_temp][u2_temp].get_reward()
+                    agent.learn(s1, u1_temp, action, reward_rm, s2, u2_temp)
+
+            reward_rm = agent.rm.delta_r[u1][u2].get_reward()
+            agent.learn(s1, u1, action, reward_rm, s2, u2)
+
+            # update params
+            u1 = u2
+            s1 = deepcopy(s2)
+            special_symbols = special_symbols_
+            obsListener = deepcopy(obsListener_)
+
+            accum_reward += reward # note this reward comes from environement and not reward machine
+            num_step += 1
+
+        reward_history.append(accum_reward)
+        avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
+
+        if (i % PRINT_FREQ == 0): # Print training every PRINT_FREQ episodes
+            print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
+    env.close()
+    envListener.close()
+    return avg_reward
 
 def dqn_learning(args):
     """
@@ -674,6 +775,9 @@ elif args.algo == "q_learning":
 
 elif args.algo == "qrm_learning":
     avg_reward = qrm_learning(args=args)
+
+elif args.algo == "crm_learning":
+    avg_reward = crm_learning(args=args)
 
 elif args.algo == "dqn_learning":
     avg_reward = dqn_learning(args=args)
