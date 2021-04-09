@@ -19,18 +19,15 @@ class DeepQNetwork(nn.Module):
         for i in range(n_rm_states):
             self.rm_network.append(
                     nn.Sequential(
-                        nn.Linear(np.prod(input_dims), 64),nn.ReLU(),
-                        nn.Linear(64, 64),nn.ReLU(),
-                        nn.Linear(64, 64),nn.ReLU(),
-                        nn.Linear(64, 64),nn.ReLU(),
-                        nn.Linear(64, 64),nn.ReLU(),
-                        nn.Linear(64, n_actions)
+                        nn.Linear(np.prod(input_dims), 256),nn.ReLU(),
+                        nn.Linear(256, n_actions)
                         )
                     )
         # nn.ModuleList makes Pytorch read the created Python list as a
         # nn.Module list of objects
         self.rm_network = nn.ModuleList(self.rm_network)
-        self.optimizer = optim.Adam(self.rm_network.parameters(), lr=lr)
+        
+        self.optimizer = optim.RMSprop(self.rm_network.parameters(), lr=lr)
 
         self.loss = nn.MSELoss()
         
