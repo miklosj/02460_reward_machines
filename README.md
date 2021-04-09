@@ -30,6 +30,9 @@
 
 ```
 --- requirements.txt
+--- /figures
+--- /models
+--- /plots
 --- /src
       |
       --- main.py
@@ -50,6 +53,28 @@
             --- __init__.py
             --- crm_learning.py
       --- /DQN
+            |
+            --- __init__.py
+            --- deep_q_network.py
+            --- dqn_learning.py
+            --- replay_memory.py
       --- /DDQN
+            |
+            --- __init__.py
+            --- deep_q_network.py
+            --- ddqn_learning.py
+            --- replay_memory.py
+      --- /DCRM
+            |
+            --- __init__.py
+            --- deep_q_network.py
+            --- dcrm_learning.py
+            --- replay_memory.py
       --- /DQRM
+            |
+            --- __init__.py
+            --- deep_q_network.py
+            --- dqrm_learning.py
+            --- replay_memory.py
+
 ```

@@ -1,16 +1,16 @@
 import numpy as np
 import torch as T
 import torch.nn as nn
-from DQRM.deep_q_network import DeepQNetwork
-from DQRM.replay_memory import ReplayBuffer
+from DCRM.deep_q_network import DeepQNetwork
+from DCRM.replay_memory import ReplayBuffer
 from reward_machine import RewardMachine
 from utils import *
 
-class DQRMAgent(nn.Module):
+class DCRMAgent(nn.Module):
     def __init__(self, gamma, epsilon, lr, n_actions, input_dims,
                  mem_size, batch_size, eps_min=0.01, eps_dec=5e-7,
                  replace=1000, algo=None, env_name=None, chkpt_dir='tmp/dqn'):
-        super(DQRMAgent, self).__init__()
+        super(DCRMAgent, self).__init__()
 
         self.gamma = gamma
         self.epsilon = epsilon
@@ -40,19 +40,19 @@ class DQRMAgent(nn.Module):
         self.n_rm_states = self.rm.n_rm_states
 
         self.q_eval = DeepQNetwork(self.lr, self.n_actions,
-                                    input_dims=self.input_dims, n_rm_states=self.n_rm_states,
+                                    input_dims=self.input_dims,
                                     name=self.env_name+'_'+self.algo+'_q_eval',
                                     chkpt_dir=self.chkpt_dir)
 
         self.q_next = DeepQNetwork(self.lr, self.n_actions,
-                                    input_dims=self.input_dims, n_rm_states=self.n_rm_states,
+                                    input_dims=self.input_dims,
                                     name=self.env_name+'_'+self.algo+'_q_next',
                                     chkpt_dir=self.chkpt_dir)
 
-    def choose_action(self, observation, rmstate):
+    def choose_action(self, observation):
         if np.random.random() > self.epsilon:
             state = T.tensor([observation],dtype=T.float).to(self.device)
-            actions = self.q_eval.forward(state, rmstate)
+            actions = self.q_eval.forward(state)
             action = T.argmax(actions).item()
         else:
             action = np.random.choice(self.action_space)
@@ -103,8 +103,8 @@ class DQRMAgent(nn.Module):
         states, u1s, actions, rewards, states_, u2s, dones = self.sample_memory()
         indices = np.arange(self.batch_size)
 
-        q_pred = self.q_eval.forward(states, u1s)[indices, actions]
-        q_next = self.q_next.forward(states_, u2s).max(dim=1)[0]
+        q_pred = self.q_eval.forward(states)[indices, actions]
+        q_next = self.q_next.forward(states_).max(dim=1)[0]
 
         q_next[dones] = 0.0
         q_target = rewards + self.gamma*q_next
