@@ -1,16 +1,16 @@
 import numpy as np
 import torch as T
 import torch.nn as nn
-from DCRM.deep_q_network import DeepQNetwork
-from DCRM.replay_memory import ReplayBuffer
+from DDCRM.deep_q_network import DeepQNetwork
+from DDCRM.replay_memory import ReplayBuffer
 from reward_machine import RewardMachine
 from utils import *
 
-class DCRMAgent(nn.Module):
+class DDCRMAgent(nn.Module):
     def __init__(self, gamma, epsilon, lr, n_actions, input_dims,
                  mem_size, batch_size, eps_min=0.01, eps_dec=5e-7,
                  replace=1000, algo=None, env_name=None, chkpt_dir='tmp/dqn'):
-        super(DCRMAgent, self).__init__()
+        super(DDCRMAgent, self).__init__()
 
         self.gamma = gamma
         self.epsilon = epsilon
@@ -104,11 +104,13 @@ class DCRMAgent(nn.Module):
         indices = np.arange(self.batch_size)
 
         q_pred = self.q_eval.forward(states)[indices, actions]
-        q_next = self.q_next.forward(states_).max(dim=1)[0]
-        
+        q_next = self.q_next.forward(states_)
+        q_eval = self.q_eval.forward(states_)
+
+        max_actions = T.argmax(q_eval, dim=1)
         q_next[dones] = 0.0
         
-        q_target = rewards + self.gamma*q_next
+        q_target = rewards + self.gamma*q_next[indices, max_actions]
 
         loss = self.q_eval.loss(q_target, q_pred).to(self.device)
         loss.backward()

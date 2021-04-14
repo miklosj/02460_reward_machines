@@ -95,8 +95,9 @@ class DQRMAgent(nn.Module):
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
             return
-
-        self.q_eval.optimizer.zero_grad()
+        
+        for i in range(self.n_rm_states):
+            self.q_eval.optimizer[i].zero_grad()
 
         self.replace_target_network()
 
@@ -112,7 +113,8 @@ class DQRMAgent(nn.Module):
         loss = self.q_eval.loss(q_target, q_pred).to(self.device)
         loss.backward()
 
-        self.q_eval.optimizer.step()
+        for i in range(self.n_rm_states):
+            self.q_eval.optimizer[i].step()
         self.learn_step_counter += 1
 
         self.decrement_epsilon()
