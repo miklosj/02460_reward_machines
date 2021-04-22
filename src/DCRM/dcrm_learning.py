@@ -30,7 +30,9 @@ class DCRMAgent(nn.Module):
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions)
 
         temp = self.env_name.split("-")[1]
-        self.name2indx_dict = {"DoorKey":1, "Unlock":2, "Empty":3}
+
+        self.name2indx_dict = {"DoorKey":1, "Unlock":2, "Empty":3, "KeyCorridorS3R1":4,
+                "KeyCorridorS3R2":5, "KeyCorridorS3R3":6, "KeyCorridorS4R3":7}
         self.env_indx = self.name2indx_dict[temp]
 
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')

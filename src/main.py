@@ -390,22 +390,22 @@ def dqn_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
+    
     # fully obs wrapper for Event Listener
-    #envListener = FullyObsWrapper(env)
-    #envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
-
-    env = FullyObsWrapper(env)
+    envListener = deepcopy(env)
+    envListener = FullyObsWrapper(envListener)
+    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
-    # env = OneHotPartialObsWrapper(env)
+    env = RGBImgPartialObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    #envListener.seed(0)
+    envListener.seed(0)
 
     obs = env.reset()
     #print(obs.shape)
-    #obsListener = envListener.reset()
+    obsListener = envListener.reset()
     agent = DQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
             batch_size=32, replace=1000, eps_dec=1e-5,
@@ -434,10 +434,10 @@ def dqn_learning(args):
     for i in range(args.num_games):
         done = False
         observation = env.reset()
-        #obsListener = envListener.reset()
+        obsListener = envListener.reset()
         state_label = ""
-        #special_symbols = get_special_symbols(obsListener)
-        special_symbols = ls.get_special_symbols(observation)
+        
+        special_symbols = ls.get_special_symbols(obsListener)
         u1 = agent.rm.u0 # initial state from reward machine
 
         n_steps = 0
@@ -448,9 +448,8 @@ def dqn_learning(args):
             score += reward
             
             # Run parallel environment to check for environment objects states
-            #obsListener_ , _, _, _ = envListener.step(action)
-            #special_symbols_ = get_special_symbols(obsListener_)
-            special_symbols_ = ls.get_special_symbols(observation_)
+            obsListener_ , _, _, _ = envListener.step(action)
+            special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
             # Get reward machine state 
@@ -462,17 +461,11 @@ def dqn_learning(args):
                         reward_rm, observation_, done)
                 agent.learn()
  
-            if done:
-                print("||",state_label,"||")
-                print(u1,u2,"\n",reward_rm,score)
-
-
-
             # Update params
-            u1 = u2
-            special_symbols = special_symbols_
+            u1 = deepcopy(u2)
+            special_symbols = deepcopy(special_symbols_)
             #obsListener = deepcopy(obsListener_)
-            observation = observation_
+            observation = deepcopy(observation_)
             n_steps += 1
 
         scores.append(score)
@@ -516,22 +509,22 @@ def ddqn_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
+    
     # fully obs wrapper for Event Listener
-    #envListener = FullyObsWrapper(env)
-    #envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
-
-    env = FullyObsWrapper(env)
+    envListener = deepcopy(env)
+    envListener = FullyObsWrapper(envListener)
+    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
-    # env = OneHotPartialObsWrapper(env)
+    env = RGBImgPartialObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    #envListener.seed(0)
+    envListener.seed(0)
 
     obs = env.reset()
     #print(obs.shape)
-    #obsListener = envListener.reset()
+    obsListener = envListener.reset()
     agent = DDQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
             batch_size=32, replace=1000, eps_dec=1e-5,
@@ -558,10 +551,10 @@ def ddqn_learning(args):
         done = False
         observation = env.reset()
         #print("Episode: ", i)
-        #obsListener = envListener.reset()
+        obsListener = envListener.reset()
+        
         state_label = ""
-        #special_symbols = get_special_symbols(obsListener)
-        special_symbols = ls.get_special_symbols(observation)
+        special_symbols = ls.get_special_symbols(obsListener)
         u1 = agent.rm.u0 # initial state from reward machine
 
         n_steps = 0
@@ -572,11 +565,9 @@ def ddqn_learning(args):
             score += reward
             
             # Run parallel environment to check for environment objects states
-            #obsListener_ , _, _, _ = envListener.step(action)
-            #special_symbols_ = get_special_symbols(obsListener_)
-            special_symbols_ = ls.get_special_symbols(observation_)
+            obsListener_ , _, _, _ = envListener.step(action)
+            special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
-
             # Get reward machine state 
             u2 = agent.rm.get_next_state(u1, state_label)
             reward_rm = agent.rm.delta_r[u1][u2].get_reward()
@@ -585,18 +576,19 @@ def ddqn_learning(args):
                 agent.store_transition(observation, action,
                         reward_rm, observation_, done)
                 agent.learn()
- 
-            if done:
+
+            if score>0:
                 print("||",state_label,"||")
+                #print(obsListener)
+                #print(obsListener_)
                 print(u1,u2,"\n",reward_rm,score)
 
 
-
             # Update params
-            u1 = u2
-            special_symbols = special_symbols_
+            u1 = deepcopy(u2)
+            special_symbols = deepcopy(special_symbols_)
             #obsListener = deepcopy(obsListener_)
-            observation = observation_
+            observation = deepcopy(observation_)
             n_steps += 1
 
         scores.append(score)
@@ -708,6 +700,11 @@ def dcrm_learning(args):
 
                 agent.store_transition(observation, u1, action,
                     reward_rm, observation_, u2, done)
+
+
+            #if done:
+            #    print("||",state_label,"||")
+            #    print(u1,u2,"\n",reward_rm,score)
 
             agent.learn()
 
@@ -921,7 +918,7 @@ def dqrm_learning(args):
     
     for i in range(args.num_games):
         done = False
-        #print("Running episode: ", i)
+        print("Running episode: ", i)
         observation = env.reset()
 
         obsListener = envListener.reset()
@@ -943,15 +940,22 @@ def dqrm_learning(args):
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
             # Get reward machine state
-            for u1 in range(agent.n_rm_states):
-                u2 = agent.rm.get_next_state(u1, state_label)
-                reward_rm = agent.rm.delta_r[u1][u2].get_reward()
+            u1_ = np.zeros(agent.n_rm_states)
+            u2_ = np.zeros(agent.n_rm_states)
+            reward_rm = np.zeros(agent.n_rm_states)
+            for j in range(agent.n_rm_states):
+                k = agent.rm.get_next_state(j, state_label)
+                rew_rm = agent.rm.delta_r[j][k].get_reward()
+                u1_[j] = j
+                u2_[j] = k
+                reward_rm[j] = rew_rm
 
-                agent.store_transition(observation, u1, action,
-                    reward_rm, observation_, u2, done)
+            agent.store_transition(observation, u1_, action,
+                reward_rm, observation_, u2_, done)
 
             agent.learn()
 
+            u2 = agent.rm.get_next_state(u1, state_label)
             ## Update params
             special_symbols = special_symbols_
             #obsListener = obsListener_
@@ -981,7 +985,7 @@ def dqrm_learning(args):
 
 # Define some constants
 MAX_NUM_STEPS = 10000 # max number of steps within episode/games
-AVG_FREQ = 10        # compute reward avg of last AVG_FREQ num of episodes/games
+AVG_FREQ = 100        # compute reward avg of last AVG_FREQ num of episodes/games
 PRINT_FREQ = 1       # every PRINT_FREQ number of episodes print train information
 
 # Custom error class

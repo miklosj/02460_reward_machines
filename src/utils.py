@@ -10,7 +10,7 @@ class logical_symbols:
     def get_special_symbols(self, obs):
         special_symbols = []
         xdim, ydim, _ = obs.shape
-        self.agent_pos = [-1,-1]
+        self.agent_pos = [-2,-2]
         for i in range(xdim):
             for j in range(ydim):
                 obj_id, color_id, state_id = obs[i,j,:]
