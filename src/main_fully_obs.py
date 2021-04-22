@@ -48,7 +48,7 @@ def random_baseline(args):
 
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    env = RGBImgPartialObsWrapper(env) # Get pixel observations
+    env = RGBImgObsWrapper(env) # Get pixel observations
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
     env.seed(0)       # sets the seed
     obs = env.reset() # This now produces an RGB tensor only
@@ -95,7 +95,7 @@ def q_learning_baseline(args):
     """
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    env = RGBImgPartialObsWrapper(env) # Get pixel observations
+    env = RGBImgObsWrapper(env) # Get pixel observations
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
     env.seed(0)       # sets the seed
     obs = env.reset() # This now produces an RGB tensor only
@@ -397,7 +397,7 @@ def dqn_learning(args):
     envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
-    env = RGBImgPartialObsWrapper(env)
+    env = RGBImgObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
@@ -516,7 +516,7 @@ def ddqn_learning(args):
     envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
-    env = RGBImgPartialObsWrapper(env)
+    env = RGBImgObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
@@ -635,7 +635,7 @@ def dcrm_learning(args):
 
     # partial obs wrapper for agent
     #env = FullyObsWrapper(env)
-    env = RGBImgPartialObsWrapper(env)
+    env = RGBImgObsWrapper(env)
     #env = FlatObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
@@ -761,7 +761,7 @@ def ddcrm_learning(args):
 
     # partial obs wrapper for agent
     #env = FullyObsWrapper(env)
-    env = RGBImgPartialObsWrapper(env)
+    env = RGBImgObsWrapper(env)
     #env = FlatObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
@@ -885,7 +885,7 @@ def dqrm_learning(args):
 
     # partial obs wrapper for agent
     # env = OneHotPartialObsWrapper(env)
-    env = RGBImgPartialObsWrapper(env)
+    env = RGBImgObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
