@@ -29,6 +29,13 @@ if not os.path.exists("../models"):
 if not os.path.exists("../results"):
     os.makedirs("../results")
 
+
+def env_unwrapper(env):
+    full_grid = env.grid.encode()
+    full_grid[env.agent_pos[0]][env.agent_pos[1]] = np.array([10, 0, env.agent_dir])
+    return full_grid
+
+
 # Algorithms
 def random_baseline(args):
     """
@@ -119,9 +126,6 @@ def q_learning_baseline(args):
 
             action = agent.choose_action(obs)
             obs_, reward, done, info = env.step(action)
-            #print(obs.size)
-            #print(obs.ndim)
-            #print(obs.shape)
             agent.learn(obs, action, reward, obs_, done)
             obs = deepcopy(obs_)
             accum_reward += reward
@@ -152,11 +156,6 @@ def qrm_learning(args):
     """
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(envListener)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
     env = RGBImgPartialObsWrapper(env)
@@ -164,10 +163,9 @@ def qrm_learning(args):
 
     # sets the seed
     env.seed(0)       
-    envListener.seed(0)
 
     obs = env.reset()
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
 
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
@@ -186,7 +184,7 @@ def qrm_learning(args):
 
         # reset the two envs
         s1 = env.reset()
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
 
         state_label = "" # reset state_label
         special_symbols = ls.get_special_symbols(obsListener)
@@ -201,9 +199,7 @@ def qrm_learning(args):
             s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
             u2 = agent.rm.get_next_state(u1, state_label)
 
-            # dirty  hack, we ran two parallel envs, one for the agent and one fully observable for the 
-            # event listener that returns the label function used to make transitions of the Reward Machine 
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
@@ -231,35 +227,6 @@ def qrm_learning(args):
             accum_reward += reward # note this reward comes from environement and not reward machine
             num_step += 1
             
-            """
-            obsListener_ , _, _, _ = envListener.step(action)
-            special_symbols_ = get_special_symbols(obsListener_)
-            state_label = return_symbol(special_symbols, special_symbols_, state_label)
-
-            # Paralell learning. For this transition s1 -> s2
-            # learn as if you were on every possible state of the RM
-            for u1_temp in unique_states:
-                if (u1_temp != u1):
-                    u2_temp = agent.rm.get_next_state(u1_temp, state_label)
-                    if u2_temp not in unique_states: # sometimes the transition is broken??
-                        u2_temp = u1_temp
-
-                    reward_rm = agent.rm.delta_r[u1_temp][u2_temp].get_reward()
-                    agent.learn(s1, u1_temp, action, reward_rm, s2, u2_temp)
-
-            # the actual reward machine state
-            u2 = agent.rm.get_next_state(u1, state_label)
-            agent.learn(s1, u1, action, reward_rm, s2, u2)
-
-            # update params
-            u1 = u2
-            special_symbols = special_symbols_
-            obsListener = deepcopy(obsListener_)
-            s1 = deepcopy(s2)
-
-            accum_reward += reward
-            num_step += 1
-            """
 
         reward_history.append(accum_reward)
         avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
@@ -267,7 +234,6 @@ def qrm_learning(args):
         if (i % PRINT_FREQ == 0): # Print training every PRINT_FREQ episodes
             print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
     env.close()
-    envListener.close()
     return avg_reward
 
 def crm_learning(args):
@@ -287,11 +253,6 @@ def crm_learning(args):
     """
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(envListener)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
     env = RGBImgPartialObsWrapper(env)
@@ -299,10 +260,9 @@ def crm_learning(args):
 
     # sets the seed
     env.seed(0)       
-    envListener.seed(0)
 
     obs = env.reset()
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
 
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
@@ -321,7 +281,7 @@ def crm_learning(args):
 
         # reset the two envs
         s1 = env.reset()
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
 
         state_label = "" # reset state_label
         special_symbols = ls.get_special_symbols(obsListener)
@@ -336,9 +296,7 @@ def crm_learning(args):
             s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
             u2 = agent.rm.get_next_state(u1, state_label)
 
-            # dirty  hack, we ran two parallel envs, one for the agent and one fully observable for the 
-            # event listener that returns the label function used to make transitions of the Reward Machine 
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
@@ -368,7 +326,6 @@ def crm_learning(args):
         if (i % PRINT_FREQ == 0): # Print training every PRINT_FREQ episodes
             print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
     env.close()
-    envListener.close()
     return avg_reward
 
 def dqn_learning(args):
@@ -390,22 +347,16 @@ def dqn_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(envListener)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
     env = RGBImgPartialObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    envListener.seed(0)
 
     obs = env.reset()
     #print(obs.shape)
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
     agent = DQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
             batch_size=32, replace=1000, eps_dec=1e-5,
@@ -434,7 +385,7 @@ def dqn_learning(args):
     for i in range(args.num_games):
         done = False
         observation = env.reset()
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
         state_label = ""
         
         special_symbols = ls.get_special_symbols(obsListener)
@@ -448,7 +399,7 @@ def dqn_learning(args):
             score += reward
             
             # Run parallel environment to check for environment objects states
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
@@ -509,22 +460,16 @@ def ddqn_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(envListener)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent 
     env = RGBImgPartialObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    envListener.seed(0)
 
     obs = env.reset()
     #print(obs.shape)
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
     agent = DDQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
             batch_size=32, replace=1000, eps_dec=1e-5,
@@ -551,7 +496,7 @@ def ddqn_learning(args):
         done = False
         observation = env.reset()
         #print("Episode: ", i)
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
         
         state_label = ""
         special_symbols = ls.get_special_symbols(obsListener)
@@ -565,7 +510,7 @@ def ddqn_learning(args):
             score += reward
             
             # Run parallel environment to check for environment objects states
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
             # Get reward machine state 
@@ -587,7 +532,7 @@ def ddqn_learning(args):
             # Update params
             u1 = deepcopy(u2)
             special_symbols = deepcopy(special_symbols_)
-            #obsListener = deepcopy(obsListener_)
+            obsListener = deepcopy(obsListener_)
             observation = deepcopy(observation_)
             n_steps += 1
 
@@ -627,11 +572,6 @@ def dcrm_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(envListener)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent
     #env = FullyObsWrapper(env)
@@ -640,10 +580,9 @@ def dcrm_learning(args):
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    envListener.seed(0)
 
     obs = env.reset()
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
     print(obs.shape) 
     
     agent = DCRMAgent(gamma=0.90, epsilon=1, lr=0.0001, input_dims=(obs.shape),
@@ -672,7 +611,7 @@ def dcrm_learning(args):
         done = False
         #print("Running episode: ", i)
         observation = env.reset()
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
         
         state_label = ""
         
@@ -688,7 +627,7 @@ def dcrm_learning(args):
             score += reward
 
             # Run parallel environment to check for environment objects states
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
@@ -711,7 +650,7 @@ def dcrm_learning(args):
             ## Update params
             special_symbols = special_symbols_
             
-            #obsListener = obsListener_
+            obsListener = obsListener_
             observation = observation_
 
             n_steps += 1
@@ -753,11 +692,6 @@ def ddcrm_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(envListener)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent
     #env = FullyObsWrapper(env)
@@ -766,10 +700,9 @@ def ddcrm_learning(args):
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    envListener.seed(0)
 
     obs = env.reset()
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
     print(obs.shape) 
     
     agent = DDCRMAgent(gamma=0.90, epsilon=1, lr=0.0001, input_dims=(obs.shape),
@@ -798,7 +731,7 @@ def ddcrm_learning(args):
         done = False
         #print("Running episode: ", i)
         observation = env.reset()
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
         
         state_label = ""
         
@@ -814,7 +747,7 @@ def ddcrm_learning(args):
             score += reward
 
             # Run parallel environment to check for environment objects states
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
@@ -832,7 +765,7 @@ def ddcrm_learning(args):
             ## Update params
             special_symbols = special_symbols_
             
-            #obsListener = obsListener_
+            obsListener = obsListener_
             observation = observation_
 
             n_steps += 1
@@ -876,12 +809,6 @@ def dqrm_learning(args):
     algorithm = args.algo
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
-    
-    
-    # fully obs wrapper for Event Listener
-    envListener = deepcopy(env)
-    envListener = FullyObsWrapper(env)
-    envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
     # partial obs wrapper for agent
     # env = OneHotPartialObsWrapper(env)
@@ -889,10 +816,9 @@ def dqrm_learning(args):
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
     env.seed(0)       # sets the seed
-    envListener.seed(0)
 
     obs = env.reset()
-    obsListener = envListener.reset()
+    obsListener = env_unwrapper(env)
     
     agent = DQRMAgent(gamma=0.90, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
@@ -921,7 +847,7 @@ def dqrm_learning(args):
         print("Running episode: ", i)
         observation = env.reset()
 
-        obsListener = envListener.reset()
+        obsListener = env_unwrapper(env)
         state_label = ""
         special_symbols = ls.get_special_symbols(obsListener)
 
@@ -934,8 +860,7 @@ def dqrm_learning(args):
             observation_, reward, done, info = env.step(action)
             score += reward
 
-            # Run parallel environment to check for environment objects states
-            obsListener_ , _, _, _ = envListener.step(action)
+            obsListener_ = env_unwrapper(env)
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
 
@@ -958,7 +883,7 @@ def dqrm_learning(args):
             u2 = agent.rm.get_next_state(u1, state_label)
             ## Update params
             special_symbols = special_symbols_
-            #obsListener = obsListener_
+            obsListener = obsListener_
             observation = observation_
             u1 = u2
             n_steps += 1
