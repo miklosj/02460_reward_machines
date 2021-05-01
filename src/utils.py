@@ -2,6 +2,7 @@ import gym
 from gym_minigrid.wrappers import *
 import numpy as np
 
+""" Class that will handle the reward machine states """
 class logical_symbols:
     def __init__(self):
         self.goal_pos = [-1,-1]
@@ -53,3 +54,16 @@ class logical_symbols:
                     state_label = state_label.replace("k","") #key is dropped
 
         return state_label
+
+""" Necessary function for reshaping the images """
+def reshape_obs(obs):
+    "[h,w,n_chan] --> [n_chan,h,w]"
+    dims = obs.shape
+    obs = obs.reshape(dims[2],dims[0],dims[1])
+    return obs
+
+""" One hot encode the Reward Machine state """
+def rm_state_onehot(rm_state, n_rm_states):
+    rm_state_oh = np.zeros(n_rm_states)
+    rm_state_oh[rm_state] = 1.0
+    return rm_state_oh

@@ -26,8 +26,7 @@ class DCRMAgent(nn.Module):
         self.chkpt_dir = chkpt_dir
         self.action_space = [i for i in range(n_actions)]
         self.learn_step_counter = 0
-    
-        self.memory = ReplayBuffer(mem_size, input_dims, n_actions)
+        self.mem_size = mem_size
 
         temp = self.env_name.split("-")[1]
 
@@ -41,20 +40,24 @@ class DCRMAgent(nn.Module):
         self.rm = RewardMachine("minigrid_reward_machines.json", self.env_indx) # load Reward Machine
         self.n_rm_states = self.rm.n_rm_states
 
+        self.memory = ReplayBuffer(self.mem_size, self.input_dims, self.n_actions, self.n_rm_states)
+        
         self.q_eval = DeepQNetwork(self.lr, self.n_actions,
                                     input_dims=self.input_dims,
                                     name=self.env_name+'_'+self.algo+'_q_eval',
-                                    chkpt_dir=self.chkpt_dir)
+                                    n_rm_states=self.n_rm_states,chkpt_dir=self.chkpt_dir)
 
         self.q_next = DeepQNetwork(self.lr, self.n_actions,
                                     input_dims=self.input_dims,
                                     name=self.env_name+'_'+self.algo+'_q_next',
-                                    chkpt_dir=self.chkpt_dir)
+                                    n_rm_states=self.n_rm_states,chkpt_dir=self.chkpt_dir)
 
-    def choose_action(self, observation):
+    def choose_action(self, observation, rm_state):
         if np.random.random() > self.epsilon:
             state = T.tensor([observation],dtype=T.float).to(self.device)
-            actions = self.q_eval.forward(state)
+            rm_state = rm_state_onehot(rm_state, self.n_rm_states)
+            rm_state = T.tensor([rm_state],dtype=T.float).to(self.device)
+            actions = self.q_eval.forward(state, rm_state)
             action = T.argmax(actions).item()
         else:
             action = np.random.choice(self.action_space)
@@ -105,8 +108,8 @@ class DCRMAgent(nn.Module):
         states, u1s, actions, rewards, states_, u2s, dones = self.sample_memory()
         indices = np.arange(self.batch_size)
 
-        q_pred = self.q_eval.forward(states)[indices, actions]
-        q_next = self.q_next.forward(states_).max(dim=1)[0]
+        q_pred = self.q_eval.forward(states, u1s)[indices, actions]
+        q_next = self.q_next.forward(states_, u2s).max(dim=1)[0]
         
         q_next[dones] = 0.0
         
