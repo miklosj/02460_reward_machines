@@ -103,7 +103,7 @@ def q_learning_baseline(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QParams(gamma=0.99, eps_start=1.0, eps_dec=5e-6, eps_end=0.01, n_actions=7, lr=5e-3)
+    params = QParams(gamma=0.999, eps_start=1.0, eps_dec=5e-8, eps_end=0.05, n_actions=7, lr=1e-3)
     agent = QAgent(params)
 
     print("Episode num_steps avg_Reward")
@@ -172,7 +172,7 @@ def qrm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QRMParams(gamma=0.99, eps_start=0.01, eps_dec=5e-6, eps_end=0.01, n_actions=7, lr=5e-3, env_name=args.env_name)
+    params = QRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-8, eps_end=0.05, n_actions=7, lr=1e-3, env_name=args.env_name)
     agent = QRMAgent(params)
     unique_states = agent.rm.unique_states[:-1]
 
@@ -231,35 +231,6 @@ def qrm_learning(args):
             accum_reward += reward # note this reward comes from environement and not reward machine
             num_step += 1
             
-            """
-            obsListener_ , _, _, _ = envListener.step(action)
-            special_symbols_ = get_special_symbols(obsListener_)
-            state_label = return_symbol(special_symbols, special_symbols_, state_label)
-
-            # Paralell learning. For this transition s1 -> s2
-            # learn as if you were on every possible state of the RM
-            for u1_temp in unique_states:
-                if (u1_temp != u1):
-                    u2_temp = agent.rm.get_next_state(u1_temp, state_label)
-                    if u2_temp not in unique_states: # sometimes the transition is broken??
-                        u2_temp = u1_temp
-
-                    reward_rm = agent.rm.delta_r[u1_temp][u2_temp].get_reward()
-                    agent.learn(s1, u1_temp, action, reward_rm, s2, u2_temp)
-
-            # the actual reward machine state
-            u2 = agent.rm.get_next_state(u1, state_label)
-            agent.learn(s1, u1, action, reward_rm, s2, u2)
-
-            # update params
-            u1 = u2
-            special_symbols = special_symbols_
-            obsListener = deepcopy(obsListener_)
-            s1 = deepcopy(s2)
-
-            accum_reward += reward
-            num_step += 1
-            """
 
         reward_history.append(accum_reward)
         avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
@@ -307,7 +278,7 @@ def crm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = CRMParams(gamma=0.99, eps_start=0.01, eps_dec=5e-6, eps_end=0.01, n_actions=7, lr=5e-3, env_name=args.env_name)
+    params = CRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-8, eps_end=0.05, n_actions=7, lr=1e-3, env_name=args.env_name)
     agent = CRMAgent(params)
     unique_states = agent.rm.unique_states[:-1]
 
