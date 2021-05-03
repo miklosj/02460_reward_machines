@@ -37,55 +37,6 @@ def env_unwrapper(env):
 
 
 # Algorithms
-def random_baseline(args):
-    """
-    Runs an agent that chooses actions within the action space
-    randomly, so as to use as baseline
-
-    Parameters:
-    ------------
-    args: dict
-        command line arguments (args.num_games, ...)
-
-    Returns:
-    ------------
-    avg_reward: list
-        list of average rewards every AVG_FREQ num episodes
-    """
-
-    # make environement and define observation format with Wrappers
-    env = gym.make(args.env_name)
-    env = RGBImgPartialObsWrapper(env) # Get pixel observations
-    env = ImgObsWrapper(env) # Get rid of the 'mission' field
-    env.seed(0)       # sets the seed
-    obs = env.reset() # This now produces an RGB tensor only
-
-    # Vector for storing intermediate results
-    reward_history, avg_reward = [], []
-
-    print("Episode num_steps avg_reward")
-    for i in range(args.num_games):
-        num_step , accum_reward = 0, 0
-        done = False
-        env.reset()
-        while not done:
-
-            if (num_step > MAX_NUM_STEPS): # To avoid it running forever
-                raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
-                exit(1)
-
-            obs, reward, done, info = env.step(env.action_space.sample()) # take random action
-            accum_reward += reward
-            num_step += 1
-
-        reward_history.append(accum_reward/num_step)
-        avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
-
-        if (i % PRINT_FREQ == 0): # Print training every PRINT_FREQ episodes
-            print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
-    env.close()
-    return avg_reward
-
 def q_learning_baseline(args):
     """
     Runs an agent with Q-learning algorihtm, so as to use as baseline
@@ -110,7 +61,7 @@ def q_learning_baseline(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QParams(gamma=0.999, eps_start=1.0, eps_dec=5e-8, eps_end=0.05, n_actions=7, lr=1e-3)
+    params = QParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-4)
     agent = QAgent(params)
 
     print("Episode num_steps avg_Reward")
@@ -119,10 +70,6 @@ def q_learning_baseline(args):
         done = False
         obs = env.reset()
         while not done:
-
-            if (num_step > MAX_NUM_STEPS): # To avoid it running forever
-                raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
-                exit(1)
 
             action = agent.choose_action(obs)
             obs_, reward, done, info = env.step(action)
@@ -170,7 +117,7 @@ def qrm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-8, eps_end=0.05, n_actions=7, lr=1e-3, env_name=args.env_name)
+    params = QRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-4, env_name=args.env_name)
     agent = QRMAgent(params)
     unique_states = agent.rm.unique_states[:-1]
 
@@ -191,10 +138,6 @@ def qrm_learning(args):
         u1 = agent.rm.u0 # initial state from reward machine
         while not done:
 
-            if (num_step > MAX_NUM_STEPS): # To avoid it running forever
-                raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
-                exit(1)
-
             action = agent.choose_action(s1, u1)
             s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
             u2 = agent.rm.get_next_state(u1, state_label)
@@ -211,10 +154,6 @@ def qrm_learning(args):
                     reward_rm = agent.rm.delta_r[u1_temp][u2_temp].get_reward()
                     agent.learn(s1, u1_temp, action, reward_rm, s2, u2_temp)
              
-            #print(f"state_label: {state_label}")
-            #print(f"reward_machine_state: {u1}, {u2}")
-            #print(u1,u2)
-
             reward_rm = agent.rm.delta_r[u1][u2].get_reward()
             agent.learn(s1, u1, action, reward_rm, s2, u2)
 
@@ -267,7 +206,7 @@ def crm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = CRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-8, eps_end=0.05, n_actions=7, lr=1e-3, env_name=args.env_name)
+    params = CRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-4, env_name=args.env_name)
     agent = CRMAgent(params)
     unique_states = agent.rm.unique_states[:-1]
 
@@ -287,10 +226,6 @@ def crm_learning(args):
         special_symbols = ls.get_special_symbols(obsListener)
         u1 = agent.rm.u0 # initial state from reward machine
         while not done:
-
-            if (num_step > MAX_NUM_STEPS): # To avoid it running forever
-                raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
-                exit(1)
 
             action = agent.choose_action(s1, u1)
             s2, reward, done, info = env.step(action) # we dont want the action to come from the env but the rm
