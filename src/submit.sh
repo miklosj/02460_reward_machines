@@ -1,7 +1,7 @@
 #!/bin/sh
 #BSUB -q gpuv100
 #BSUB -gpu "num=1"
-#BSUB -J DCRMful5000
+#BSUB -J PPOem
 #BSUB -n 1
 #BSUB -W 12:00
 #BSUB -R "rusage[mem=16GB]"
@@ -17,9 +17,9 @@ pip3 install gym-minigrid --user
 pip3 install gym --user
 echo "Running script..."
 
-ALGO_LIST=("dcrm_learning")
-ENV_NAME_LIST=("MiniGrid-DoorKey-8x8-v0")
-NUM_GAMES=5000
+ALGO_LIST=("ppo_learning")
+ENV_NAME_LIST=("MiniGrid-Empty-5x5-v0")
+NUM_GAMES=2000
 
 for ALGO in $ALGO_LIST
 do

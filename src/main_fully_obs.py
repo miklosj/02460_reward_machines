@@ -19,10 +19,8 @@ from DQN.dqn_learning import DQNAgent
 from DDQN.ddqn_learning import DDQNAgent
 from DCRM.dcrm_learning import DCRMAgent
 from DDCRM.ddcrm_learning import DDCRMAgent
-from DQRM.dqrm_learning import DQRMAgent
 from PPO.PPOutils import Storage, orthogonal_init
 from PPO.ppo_learning import *
-from DHRM.dhrm_learning import DHRMAgent
 
 # utils functions (label function,....)
 from utils import *
@@ -1332,12 +1330,6 @@ elif args.algo == "dcrm_learning":
 elif args.algo == "ddcrm_learning":
     avg_reward = ddcrm_learning(args=args)
 
-elif args.algo == "dqrm_learning":
-    avg_reward = dqrm_learning(args=args)
-
-elif args.algo == "dhrm_learning":
-    avg_reward = dhrm_learning(args=args)
-
 elif args.algo == "ppo_learning":
     avg_reward = ppo_learning(args=args)
 else:
@@ -1349,7 +1341,7 @@ name = str(args.algo) + "_" + str(args.env_name) + "_" + str(args.num_games)
 
 episodes = np.array([i for i in range(args.num_games) if i%PRINT_FREQ == 0])
 df = pd.DataFrame(data= {"episodes": episodes, "avg_reward": avg_reward})
-df.to_csv(path_or_buf=name + "_fully" + ".csv")
+df.to_csv(path_or_buf="../results/"+name + "_fully" + ".csv")
 
 # Plot results
 fig_name = name + ".png"
@@ -1357,7 +1349,7 @@ plt.plot(avg_reward)
 plt.xlabel("Episode")
 plt.ylabel("Avg reward")
 plt.title(f"Training Agent: {args.algo}, env: {args.env_name}")
-plt.savefig("../plots/" "fully_" + fig_name,  format="png")
+plt.savefig("../plots/"+"fully_" + fig_name,  format="png")
 t1 = time.time()
 dt = t1 - t0
 print("--- finished %s ---" % round(dt, 3))
