@@ -1,6 +1,6 @@
 #!/bin/sh
 #BSUB -q hpc
-#BSUB -J QRM_partially_obs
+#BSUB -J CRM_fully_obs
 #BSUB -n 1
 #BSUB -W 24:00
 #BSUB -R "rusage[mem=16GB]"
@@ -16,4 +16,4 @@ pip3 install gym-minigrid --user
 pip3 install gym --user
 echo "Running script..."
 
-python3 main_part_obs.py --algo=qrm_learning --env_name=MiniGrid-DoorKey-6x6-v0 --num_games=10000
+python3 main_fully_obs.py --algo=crm_learning --env_name=MiniGrid-Empty-6x6-v0 --num_games=10000

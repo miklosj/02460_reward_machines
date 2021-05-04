@@ -59,7 +59,7 @@ def q_learning_baseline(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-4)
+    params = QParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-5)
     agent = QAgent(params)
 
     print("Episode num_steps avg_Reward")
@@ -115,7 +115,7 @@ def qrm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = QRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-4, env_name=args.env_name)
+    params = QRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-5, env_name=args.env_name)
     agent = QRMAgent(params)
     unique_states = agent.rm.unique_states[:-1]
 
@@ -197,7 +197,7 @@ def crm_learning(args):
     # Vector for storing intermediate results
     reward_history, avg_reward = [], []
 
-    params = CRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-4, env_name=args.env_name)
+    params = CRMParams(gamma=0.999, eps_start=1.0, eps_dec=5e-10, eps_end=0.05, n_actions=7, lr=1e-5, env_name=args.env_name)
     agent = CRMAgent(params)
     unique_states = agent.rm.unique_states[:-1]
 
