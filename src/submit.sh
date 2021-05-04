@@ -1,9 +1,9 @@
 #!/bin/sh
 #BSUB -q gpuv100
 #BSUB -gpu "num=1"
-#BSUB -J PPOem
+#BSUB -J PPO
 #BSUB -n 1
-#BSUB -W 12:00
+#BSUB -W 24:00
 #BSUB -R "rusage[mem=16GB]"
 #BSUB -o logs/log_%J.out
 #BSUB -e logs/log_%J.err
@@ -18,8 +18,8 @@ pip3 install gym --user
 echo "Running script..."
 
 ALGO_LIST=("ppo_learning")
-ENV_NAME_LIST=("MiniGrid-Empty-5x5-v0")
-NUM_GAMES=2000
+ENV_NAME_LIST=("MiniGrid-DoorKey-8x8-v0")
+NUM_GAMES=10000
 
 for ALGO in $ALGO_LIST
 do
