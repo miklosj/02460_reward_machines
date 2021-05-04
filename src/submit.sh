@@ -1,9 +1,9 @@
 #!/bin/sh
 #BSUB -q gpuv100
 #BSUB -gpu "num=1"
-#BSUB -J DDQN
+#BSUB -J PPO
 #BSUB -n 1
-#BSUB -W 12:00
+#BSUB -W 24:00
 #BSUB -R "rusage[mem=16GB]"
 #BSUB -o logs/log_%J.out
 #BSUB -e logs/log_%J.err
@@ -17,14 +17,14 @@ pip3 install gym-minigrid --user
 pip3 install gym --user
 echo "Running script..."
 
-ALGO_LIST=("ddqn_learning")
-ENV_NAME_LIST=("MiniGrid-KeyCorridorS3R2-v0")
-NUM_GAMES=2000
+ALGO_LIST=("ppo_learning")
+ENV_NAME_LIST=("MiniGrid-DoorKey-8x8-v0")
+NUM_GAMES=10000
 
 for ALGO in $ALGO_LIST
 do
     for ENV_NAME in $ENV_NAME_LIST
     do
-    python3 main.py --algo=$ALGO --env_name=$ENV_NAME --num_games=$NUM_GAMES
+    python3 main_fully_obs.py --algo=$ALGO --env_name=$ENV_NAME --num_games=$NUM_GAMES
     done
 done
