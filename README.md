@@ -5,6 +5,8 @@
 </p>
 
  ## About
+ Reward assignment in Reinforcement learning is commonly treated as a black box under the assumption that the agent should learn to navigate the environment without prior knowledge of the rewards and learning from experience. However recently there has been some research regarding the benefits of exploiting the reward structure to speed up learning. We revisit some of the algorithms proposed for this goal and test their performance outside customized environments in a set of more complex environments commonly used for testing other RL algorithms. 
+ 
  Reinforcement Learning for Reward Machines. Relevant papers:
  * *Reward Machines: Exploiting Reward Function Structure in Reinforcement Learning* [[pdf]](https://arxiv.org/pdf/2010.03950.pdf)
  * *Using Reward Machines for High-Level Task Specification and Decomposition in Reinforcement Learning* [[pdf]](http://proceedings.mlr.press/v80/icarte18a/icarte18a.pdf)
