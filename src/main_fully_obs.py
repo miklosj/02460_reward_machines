@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 import pandas as pd
 import os
+import torch as T
+import torch.nn as nn
+import torch.nn.functional as F
 
 # Wrappers to define Observartion output
 from gym_minigrid.wrappers import *
@@ -16,10 +19,12 @@ from DQN.dqn_learning import DQNAgent
 from DDQN.ddqn_learning import DDQNAgent
 from DCRM.dcrm_learning import DCRMAgent
 from DDCRM.ddcrm_learning import DDCRMAgent
-from DQRM.dqrm_learning import DQRMAgent
+from PPO.PPOutils import Storage, orthogonal_init
+from PPO.ppo_learning import *
 
 # utils functions (label function,....)
 from utils import *
+from reward_machine import RewardMachine
 
 # Saving folders
 if not os.path.exists("../plots"):
@@ -314,7 +319,7 @@ def dqn_learning(args):
         list of average rewards every AVG_FREQ num episodes
  
     """
-    algorithm = args.algo
+    algorithm = args.algo + "_fully"
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
     
@@ -335,7 +340,7 @@ def dqn_learning(args):
     obsListener = envListener.reset()
     agent = DQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
-            batch_size=32, replace=1000, eps_dec=1e-5,
+            batch_size=32, replace=1000, eps_dec=1e-7,
             chkpt_dir='../models/', algo=algorithm, env_name=args.env_name)
 
     load_checkpoint = False
@@ -433,7 +438,7 @@ def ddqn_learning(args):
         list of average rewards every AVG_FREQ num episodes
  
     """
-    algorithm = args.algo
+    algorithm = args.algo + "_fully"
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
     
@@ -454,7 +459,7 @@ def ddqn_learning(args):
     obsListener = envListener.reset()
     agent = DDQNAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
-            batch_size=32, replace=1000, eps_dec=1e-5,
+            batch_size=32, replace=1000, eps_dec=1e-7,
             chkpt_dir='../models/', algo=algorithm, env_name=args.env_name)
 
     load_checkpoint = False
@@ -504,13 +509,6 @@ def ddqn_learning(args):
                         reward_rm, observation_, done)
                 agent.learn()
 
-            if score>0:
-                print("||",state_label,"||")
-                #print(obsListener)
-                #print(obsListener_)
-                print(u1,u2,"\n",reward_rm,score)
-
-
             # Update params
             u1 = deepcopy(u2)
             special_symbols = deepcopy(special_symbols_)
@@ -551,7 +549,7 @@ def dcrm_learning(args):
         list of average rewards every AVG_FREQ num episodes
 
     """
-    algorithm = args.algo
+    algorithm = args.algo + "_fully"
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
     
@@ -573,9 +571,9 @@ def dcrm_learning(args):
     obsListener = envListener.reset()
     print(obs.shape) 
     
-    agent = DCRMAgent(gamma=0.90, epsilon=1, lr=0.0001, input_dims=(obs.shape),
+    agent = DCRMAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
-            batch_size=32, replace=100, eps_dec=1e-6,
+            batch_size=128, replace=1000, eps_dec=1e-7,
             chkpt_dir='../models/', algo=algorithm, env_name=args.env_name)
 
     load_checkpoint = False
@@ -606,11 +604,11 @@ def dcrm_learning(args):
         special_symbols = ls.get_special_symbols(obsListener)
 
         u1 = agent.rm.u0 # initial state from reward machine
-
         n_steps = 0
         score = 0
         while not done:
-            action = agent.choose_action(observation)
+            
+            action = agent.choose_action(observation, u1)
             observation_, reward, done, info = env.step(action)
             score += reward
 
@@ -619,26 +617,30 @@ def dcrm_learning(args):
             
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
-
+    
             # Get reward machine state
-            for u1 in range(agent.n_rm_states):
-                u2 = agent.rm.get_next_state(u1, state_label)
-                reward_rm = agent.rm.delta_r[u1][u2].get_reward()
+            for u1_ in range(agent.n_rm_states):
+                u2_ = agent.rm.get_next_state(u1_, state_label)
+                reward_rm = agent.rm.delta_r[u1_][u2_].get_reward()
 
-                agent.store_transition(observation, u1, action,
-                    reward_rm, observation_, u2, done)
+                u1_ = rm_state_onehot(u1_, agent.n_rm_states)
+                u2_ = rm_state_onehot(u2_, agent.n_rm_states)
+                agent.store_transition(observation, u1_, action,
+                    reward_rm, observation_, u2_, done)
 
 
             #if done:
             #    print("||",state_label,"||")
             #    print(u1,u2,"\n",reward_rm,score)
-
+            
+            u2 = agent.rm.get_next_state(u1, state_label)
             agent.learn()
 
             ## Update params
             special_symbols = special_symbols_
             
             #obsListener = obsListener_
+            u1 = u2
             observation = observation_
 
             n_steps += 1
@@ -677,7 +679,7 @@ def ddcrm_learning(args):
         list of average rewards every AVG_FREQ num episodes
 
     """
-    algorithm = args.algo
+    algorithm = args.algo + "_fully"
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
     
@@ -699,9 +701,9 @@ def ddcrm_learning(args):
     obsListener = envListener.reset()
     print(obs.shape) 
     
-    agent = DDCRMAgent(gamma=0.90, epsilon=1, lr=0.0001, input_dims=(obs.shape),
+    agent = DDCRMAgent(gamma=0.99, epsilon=1, lr=0.0001, input_dims=(obs.shape),
             n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
-            batch_size=32, replace=100, eps_dec=1e-6,
+            batch_size=128, replace=1000, eps_dec=1e-7,
             chkpt_dir='../models/', algo=algorithm, env_name=args.env_name)
 
     load_checkpoint = False
@@ -732,11 +734,11 @@ def ddcrm_learning(args):
         special_symbols = ls.get_special_symbols(obsListener)
 
         u1 = agent.rm.u0 # initial state from reward machine
-
         n_steps = 0
         score = 0
         while not done:
-            action = agent.choose_action(observation)
+            
+            action = agent.choose_action(observation, u1)
             observation_, reward, done, info = env.step(action)
             score += reward
 
@@ -745,21 +747,30 @@ def ddcrm_learning(args):
             
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
-
+    
             # Get reward machine state
-            for u1 in range(agent.n_rm_states):
-                u2 = agent.rm.get_next_state(u1, state_label)
-                reward_rm = agent.rm.delta_r[u1][u2].get_reward()
+            for u1_ in range(agent.n_rm_states):
+                u2_ = agent.rm.get_next_state(u1_, state_label)
+                reward_rm = agent.rm.delta_r[u1_][u2_].get_reward()
 
-                agent.store_transition(observation, u1, action,
-                    reward_rm, observation_, u2, done)
+                u1_ = rm_state_onehot(u1_, agent.n_rm_states)
+                u2_ = rm_state_onehot(u2_, agent.n_rm_states)
+                agent.store_transition(observation, u1_, action,
+                    reward_rm, observation_, u2_, done)
 
+
+            #if done:
+            #    print("||",state_label,"||")
+            #    print(u1,u2,"\n",reward_rm,score)
+            
+            u2 = agent.rm.get_next_state(u1, state_label)
             agent.learn()
 
             ## Update params
             special_symbols = special_symbols_
             
             #obsListener = obsListener_
+            u1 = u2
             observation = observation_
 
             n_steps += 1
@@ -782,36 +793,34 @@ def ddcrm_learning(args):
 
     return avg_scores
 
-
-
-
-def dqrm_learning(args):
+def ppo_learning(args):
     """
-    Runs an agent with DQRM-learning algorihtm,
+    Runs an agent with PPO algorihtm,
+    Proximal Policy Optimization
 
     Parameters:
     ------------
     args: dict
-	command line arguments (args.num_games, ...)
+        command line arguments (args.num_games, ...)
 
     Returns:
     ------------
     avg_reward: list
         list of average rewards every AVG_FREQ num episodes
-
+ 
     """
-    algorithm = args.algo
+    algorithm = args.algo + "_fully"
+    env_name = args.env_name
+
     # make environement and define observation format with Wrappers
     env = gym.make(args.env_name)
     
-    
     # fully obs wrapper for Event Listener
     envListener = deepcopy(env)
-    envListener = FullyObsWrapper(env)
+    envListener = FullyObsWrapper(envListener)
     envListener = ImgObsWrapper(envListener) # Get rid of the 'mission' field
 
-    # partial obs wrapper for agent
-    # env = OneHotPartialObsWrapper(env)
+    # partial obs wrapper for agent 
     env = RGBImgObsWrapper(env)
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
 
@@ -819,17 +828,39 @@ def dqrm_learning(args):
     envListener.seed(0)
 
     obs = env.reset()
+    #print(obs.shape)
     obsListener = envListener.reset()
-    
-    agent = DQRMAgent(gamma=0.90, epsilon=1, lr=0.0001, input_dims=(obs.shape),
-            n_actions=env.action_space.n, mem_size=50000, eps_min=0.1,
-            batch_size=32, replace=100, eps_dec=1e-5,
-            chkpt_dir='../models/', algo=algorithm, env_name=args.env_name)
 
-    load_checkpoint = False
+    # PPO hyperparameters
+    num_epochs = 3
+    mem_size = 512*5
+    batch_size = 512
+    eps = 0.2
+    grad_eps = 0.5
+    value_coef = 0.5
+    entropy_coef = 0.01
+	
+    temp = env_name.split("-")[1]
+    name2indx_dict = {"DoorKey":1, "Unlock":2, "Empty":3, "KeyCorridorS3R1":4,
+                "KeyCorridorS3R2":5, "KeyCorridorS3R3":6, "KeyCorridorS4R3":7}
+    env_indx = name2indx_dict[temp]
+    rm = RewardMachine("minigrid_reward_machines.json", env_indx) # load Reward Machine
 
-    if load_checkpoint:
-        agent.load_models()
+    # Define network and optimizer
+    obs = reshape_obs(obs)
+    in_channels = obs.shape[0]
+    input_dims = obs.shape
+    print(obs.shape)
+    feature_dim = 256
+    num_actions = env.action_space.n
+    encoder = PPOEncoder(in_channels=in_channels, input_dims=input_dims, feature_dim=feature_dim)
+    policy = PPOPolicy(encoder=encoder, feature_dim=feature_dim, num_actions=num_actions)
+
+    # Define optimizer
+    optimizer = torch.optim.Adam(policy.parameters(), lr=1e-4,eps=1e-5)
+
+    # Define temporary storage
+    storage = Storage(obs.shape, mem_size)
 
     printFile = open('../results/' + 'results_' +algorithm+ args.env_name + '.txt', 'w')
 
@@ -837,58 +868,98 @@ def dqrm_learning(args):
 
     best_score = -np.inf
 
+
     # logical symbols class
     ls = logical_symbols()
  
+    
+    "Run training"
+    
     print('Episode\t','Steps\t','Score\t',
             'Best_Score\t','Epsilon\t', file=printFile)
-    
     for i in range(args.num_games):
         done = False
-        print("Running episode: ", i)
         observation = env.reset()
-
+        observation = T.tensor([reshape_obs(observation)], dtype=T.float)
         obsListener = envListener.reset()
+        
         state_label = ""
         special_symbols = ls.get_special_symbols(obsListener)
-
-        u1 = agent.rm.u0 # initial state from reward machine
+        u1 = rm.u0 # initial state from reward machine
 
         n_steps = 0
         score = 0
+        policy.eval()
         while not done:
-            action = agent.choose_action(observation, u1)
+            action, log_prob, value = policy.act(observation)
             observation_, reward, done, info = env.step(action)
+            
             score += reward
-
+            
             # Run parallel environment to check for environment objects states
             obsListener_ , _, _, _ = envListener.step(action)
             special_symbols_ = ls.get_special_symbols(obsListener_)
             state_label = ls.return_symbol(special_symbols, special_symbols_, state_label)
+            # Get reward machine state 
+            u2 = rm.get_next_state(u1, state_label)
+            reward_rm = rm.delta_r[u1][u2].get_reward()
+            
+            # Store data            
+            storage.store(observation, action, reward_rm, 
+                    done, info, log_prob, value)
 
-            # Get reward machine state
-            u1_ = np.zeros(agent.n_rm_states)
-            u2_ = np.zeros(agent.n_rm_states)
-            reward_rm = np.zeros(agent.n_rm_states)
-            for j in range(agent.n_rm_states):
-                k = agent.rm.get_next_state(j, state_label)
-                rew_rm = agent.rm.delta_r[j][k].get_reward()
-                u1_[j] = j
-                u2_[j] = k
-                reward_rm[j] = rew_rm
-
-            agent.store_transition(observation, u1_, action,
-                reward_rm, observation_, u2_, done)
-
-            agent.learn()
-
-            u2 = agent.rm.get_next_state(u1, state_label)
-            ## Update params
-            special_symbols = special_symbols_
-            #obsListener = obsListener_
+            # Update params
+            u1 = deepcopy(u2)
+            special_symbols = deepcopy(special_symbols_)
+            #obsListener = deepcopy(obsListener_)
+            observation_ =T.tensor([reshape_obs(observation_)], dtype=T.float)
             observation = observation_
-            u1 = u2
             n_steps += 1
+
+        # Add the last observation to collected data
+        _, _, value = policy.act(observation)
+        storage.store_last(observation, value)
+        # Compute return and advantage
+        storage.compute_return_advantage()
+
+        # Learning process of the policy
+        policy.train()
+        for epoch in range(num_epochs):
+            # Iterate over batches of transitions
+            generator = storage.get_generator(batch_size)
+            for batch in generator:
+                b_obs, b_action, b_log_prob, b_value, \
+                        b_returns, b_advantage = batch
+
+                # Get current policy outputs
+                new_dist, new_value = policy(b_obs)
+                new_log_prob = new_dist.log_prob(b_action)
+
+                # Clipped policy objective
+                ratio = torch.exp(new_log_prob - b_log_prob)
+                surr1 = ratio * b_advantage
+                surr2 = torch.clamp(ratio, 1.0-eps, 1.0+eps)*b_advantage
+                pi_loss = -torch.min(surr1, surr2).mean()
+
+                # Clipped value function objective
+                clipped_value = b_value + (new_value+b_value).clamp(min=-eps, max=eps)
+                vf_loss = torch.max((new_value-b_returns).pow(2), (clipped_value - b_returns).pow(2))
+                value_loss = vf_loss.mean()
+
+                # Entropy loss
+                entropy_loss = new_dist.entropy().mean()
+
+                # Backpropagate losses
+                loss = pi_loss + value_coef*value_loss - entropy_coef*entropy_loss
+                loss.backward()
+
+                # Clip gradients
+                torch.nn.utils.clip_grad_norm_(policy.parameters(), grad_eps)
+
+                # Update policy
+                optimizer.step()
+                optimizer.zero_grad()
+
 
         scores.append(score)
         steps_array.append(n_steps)
@@ -896,17 +967,13 @@ def dqrm_learning(args):
         std_scores = np.append(std_scores, np.std(scores[-100:]))
 
         print('%d\t' %i, '%d\t' %n_steps,
-                '%.2f\t' %score,'%.2f\t' %best_score,
-                '%.2f\t' %agent.epsilon)#, file=printFile)
+                '%.2f\t' %score,'%.2f\t' %best_score, file=printFile)
 
         if score > best_score:
-            if not load_checkpoint:
-                agent.save_models()
             best_score = score
 
-        eps_history.append(agent.epsilon)
-
     return avg_scores
+
 
 
 
@@ -953,9 +1020,8 @@ elif args.algo == "dcrm_learning":
 elif args.algo == "ddcrm_learning":
     avg_reward = ddcrm_learning(args=args)
 
-elif args.algo == "dqrm_learning":
-    avg_reward = dqrm_learning(args=args)
-
+elif args.algo == "ppo_learning":
+    avg_reward = ppo_learning(args=args)
 else:
     raise NotImplementedError("To be implemented")
     exit(1)
@@ -965,7 +1031,7 @@ name = str(args.algo) + "_" + str(args.env_name) + "_" + str(args.num_games)
 
 episodes = np.array([i for i in range(args.num_games) if i%PRINT_FREQ == 0])
 df = pd.DataFrame(data= {"episodes": episodes, "avg_reward": avg_reward})
-df.to_csv(path_or_buf=name + ".csv")
+df.to_csv(path_or_buf="../results/"+name + "_fully" + ".csv")
 
 # Plot results
 fig_name = name + ".png"
@@ -973,7 +1039,7 @@ plt.plot(avg_reward)
 plt.xlabel("Episode")
 plt.ylabel("Avg reward")
 plt.title(f"Training Agent: {args.algo}, env: {args.env_name}")
-plt.savefig("../plots/" + fig_name,  format="png")
+plt.savefig("../plots/"+"fully_" + fig_name,  format="png")
 t1 = time.time()
 dt = t1 - t0
 print("--- finished %s ---" % round(dt, 3))
