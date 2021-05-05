@@ -35,6 +35,53 @@ def env_unwrapper(env):
     return full_grid
 
 # Algorithms
+def random_baseline(args):
+    """
+    Runs an agent that chooses actions within the action space
+    randomly, so as to use as baseline
+    Parameters:
+    ------------
+    args: dict
+        command line arguments (args.num_games, ...)
+    Returns:
+    ------------
+    avg_reward: list
+        list of average rewards every AVG_FREQ num episodes
+    """
+
+    # make environement and define observation format with Wrappers
+    env = gym.make(args.env_name)
+    env = RGBImgObsWrapper(env) # Get pixel observations
+    env = ImgObsWrapper(env) # Get rid of the 'mission' field
+    env.seed(0)       # sets the seed
+    obs = env.reset() # This now produces an RGB tensor only
+
+    # Vector for storing intermediate results
+    reward_history, avg_reward = [], []
+
+    print("Episode num_steps avg_reward")
+    for i in range(args.num_games):
+        num_step , accum_reward = 0, 0
+        done = False
+        env.reset()
+        while not done:
+
+            if (num_step > MAX_NUM_STEPS): # To avoid it running forever
+                raise CustomError(f"Maximum number of Steps reached ({MAX_NUM_STEPS})")
+                exit(1)
+
+            obs, reward, done, info = env.step(env.action_space.sample()) # take random action
+            accum_reward += reward
+            num_step += 1
+
+        reward_history.append(accum_reward/num_step)
+        avg_reward.append(np.mean(reward_history[-AVG_FREQ:]))
+
+        if (i % 1000 == 0): # Print training every PRINT_FREQ episodes
+            print('%i \t %s \t %.3f' % (i, env.step_count, avg_reward[-1]))
+    env.close()
+    return avg_reward
+
 def q_learning_baseline(args):
     """
     Runs an agent with Q-learning algorihtm, so as to use as baseline
