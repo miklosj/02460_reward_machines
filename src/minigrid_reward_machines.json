@@ -6,14 +6,14 @@
 					"initial_state":0,
           "n_rm_states":4,
 					"rm_states": [
-									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":1, "u2":2, "delta_u":"o", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":3, "u2":3, "delta_u":"", "delta_r": "ConstantRewardFunction(0)"}
+									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(1)"},
+									{"u1":3, "u2":3, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
 				},
 				{
@@ -23,9 +23,9 @@
           "n_rm_states":3,
 					"rm_states": [
 									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(1)"},
+									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":1, "u2":0, "delta_u":"!k&!o", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":1, "u2":0, "delta_u":"!k&!o", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":1, "u2":2, "delta_u":"k&o", "delta_r": "ConstantRewardFunction(1)"},
 									{"u1":2, "u2":2, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
@@ -36,8 +36,8 @@
 					"initial_state":0,
           "n_rm_states":2,
 					"rm_states": [
-									{"u1":0, "u2":0, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":0, "u2":1, "delta_u":"g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":0, "u2":0, "delta_u":"!g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":0, "u2":1, "delta_u":"g", "delta_r": "ConstantRewardFunction(1)"},
 									{"u1":1, "u2":1, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
 				},
@@ -47,14 +47,14 @@
 					"initial_state":0,
                     "n_rm_states":4,
 					"rm_states": [
-									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":1, "u2":2, "delta_u":"o", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":3, "u2":3, "delta_u":"", "delta_r": "ConstantRewardFunction(0)"}
+									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(1)"},
+									{"u1":3, "u2":3, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
 				},
                 {
@@ -63,14 +63,14 @@
 					"initial_state":0,
                     "n_rm_states":4,
 					"rm_states": [
-									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-2)"},
+									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1.5)"},
-									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":1, "u2":2, "delta_u":"o", "delta_r": "ConstantRewardFunction(1)"},
-									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(2)"},
-									{"u1":3, "u2":3, "delta_u":"", "delta_r": "ConstantRewardFunction(2)"}
+									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":1, "u2":2, "delta_u":"o", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(1)"},
+									{"u1":3, "u2":3, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
 				},
 
@@ -80,14 +80,14 @@
 					"initial_state":0,
                     "n_rm_states":4,
 					"rm_states": [
-									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":1, "u2":2, "delta_u":"o", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":3, "u2":3, "delta_u":"", "delta_r": "ConstantRewardFunction(0)"}
+									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(1)"},
+									{"u1":3, "u2":3, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
 				},
 
@@ -97,14 +97,14 @@
 					"initial_state":0,
                     "n_rm_states":4,
 					"rm_states": [
-									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":0, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":0, "u2":1, "delta_u":"k", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(-1)"},
+									{"u1":1, "u2":0, "delta_u":"!k", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":1, "u2":1, "delta_u":"k&!o", "delta_r": "ConstantRewardFunction(0)"},
 									{"u1":1, "u2":2, "delta_u":"o", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(-1)"},
-									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(0)"},
-									{"u1":3, "u2":3, "delta_u":"", "delta_r": "ConstantRewardFunction(0)"}
+									{"u1":2, "u2":2, "delta_u":"!g", "delta_r": "ConstantRewardFunction(0)"},
+									{"u1":2, "u2":3, "delta_u":"g", "delta_r": "ConstantRewardFunction(1)"},
+									{"u1":3, "u2":3, "delta_u":"True", "delta_r": "ConstantRewardFunction(0)"}
 								]
 				}
 
