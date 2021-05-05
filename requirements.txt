@@ -1,4 +1,6 @@
-    torch==1.8.0
-    numpy==1.20.17
+    torch
+    numpy
     gym
-    
+    gym-minigrid
+    pandas
+    matplotlib
